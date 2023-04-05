@@ -1,0 +1,22 @@
+tic_settings:                             # required header for load_config fcn.
+  product: TIC_PRODUCT_T825    
+  auto_clear_driver_error: True           # ** These 4 settings         **
+  ignore_err_line_high: True              # ** were experimentally      **
+  serial_crc_enabled: False               # ** determined to stabalize  **
+  command_timeout: 0                      # ** device performance       **
+  max_speed: 180000000                    # pulses/s * 10^-4
+  starting_speed: 0                       # pulses/s * 10^-4
+  max_accel: 9000000                      # pulses/s^2 * 10^-2
+  max_decel: 9000000                      # pulses/s^2 * 10^-2
+  step_mode: TIC_STEP_MODE_MICROSTEP16 
+  current_limit: 640                    # mA, Only select values acceptable, See notes.
+  decay_mode: TIC_DECAY_MODE_T825_FAST 
+  # pin_settings:                         # Ex. Modifying Default Pin Fcn.
+  #   - pin_num: TIC_PIN_NUM_RX
+  #     func: TIC_PIN_FUNC_USER_INPUT
+  #     pullup: True
+  #     analog: False
+    # - pin_id: TIC_PIN_NUM_TX          # ... modifying a 2nd pin ...
+    #   func: TIC_PIN_FUNC_USER_INPUT
+    #   polarity: True
+    #   analog: False

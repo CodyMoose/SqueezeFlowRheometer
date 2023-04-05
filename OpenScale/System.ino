@@ -100,6 +100,9 @@ void set_default_settings(void)
 
   //Reset raw reading
   setting_raw_reading_enable = false;
+  
+  //Reset unit reading
+  setting_unit_reading_enable = false;
 
   //Reset trigger character
   setting_trigger_character = '!';

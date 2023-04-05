@@ -86,6 +86,11 @@ void system_setup(void)
     else Serial.print(F("ff"));
     Serial.println(F("]"));
 
+    Serial.print(F("u) Unit reading [O"));
+    if (setting_unit_reading_enable == true) Serial.print(F("n"));
+    else Serial.print(F("ff"));
+    Serial.println(F("]"));
+
     Serial.print(F("t) Serial trigger [O"));
     if (setting_serial_trigger_enable == true) Serial.print(F("n"));
     else Serial.print(F("ff"));
@@ -250,6 +255,20 @@ void system_setup(void)
         setting_raw_reading_enable = true;
       }
       record_system_settings();
+    }
+    else if (command == 'u')
+    {
+      Serial.print(F("\n\rUnit reading o"));
+      if (setting_unit_reading_enable == true)
+      {
+        Serial.println(F("ff"));
+        setting_unit_reading_enable = false;
+      }
+      else
+      {
+        Serial.println(F("n"));
+        setting_unit_reading_enable = true;
+      }
     }
     else if (command == 'c')
     {
@@ -496,7 +515,11 @@ int calcMinimumReadTime(void)
   long startTime = millis();
   scale.get_units(setting_average_amount); //Do a dummy read and time it
   int averageReadTime = ceil((millis() - startTime));
-  int sensorReadTime = averageReadTime;
+  int sensorReadTime = 0;
+  if (setting_unit_reading_enable == true)
+  {
+    sensorReadTime += averageReadTime;
+  }
 
   //Assume we will need to print a minimum of 7 characters at this baud rate per loop
   //1 / 9600 = 1ms * 10bits per byte = 9.6ms per byte
@@ -531,12 +554,15 @@ int calcMinimumReadTime(void)
     characters += strlen("27.81,"); //Add the time it takes to print the characters as well
   }
 
-  characters += strlen("123,"); //Basic weight without decimals
-
-  if (setting_decimal_places > 0) characters += setting_decimal_places + 1; //For example 4: 3 decimal places and the '.'
-
-  if (setting_units == UNITS_LBS) characters += strlen("lbs");
-  if (setting_units == UNITS_KG) characters += strlen("kg");
+  if (setting_unit_reading_enable == true)
+  {
+    characters += strlen("123,"); //Basic weight without decimals
+  
+    if (setting_decimal_places > 0) characters += setting_decimal_places + 1; //For example 4: 3 decimal places and the '.'
+  
+    if (setting_units == UNITS_LBS) characters += strlen("lbs");
+    if (setting_units == UNITS_KG) characters += strlen("kg");
+  }
 
   if (setting_raw_reading_enable == true)
   {

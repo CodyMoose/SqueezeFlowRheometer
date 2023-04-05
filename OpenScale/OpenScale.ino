@@ -83,6 +83,7 @@ byte setting_remote_temp_enable; //Prints the remote temperature in C
 byte setting_status_enable; //Turns on/off the blinking status LED
 byte setting_serial_trigger_enable; //Takes reading when serial character is received
 byte setting_raw_reading_enable; //Prints the raw, 24bit, long from the HX711, ex: 8355808
+byte setting_unit_reading_enable; //Prints the raw, 24bit, long from the HX711, ex: 8355808
 byte setting_trigger_character; //The character that will cause OpenScale to report a reading
 boolean setupMode = false; //This is set to true if user presses x
 
@@ -169,11 +170,13 @@ void loop()
   }
 
   //Print calibrated reading
-  Serial.print(currentReading, setting_decimal_places);
-  Serial.print(F(","));
-  if (setting_units == UNITS_LBS) Serial.print(F("lbs"));
-  if (setting_units == UNITS_KG) Serial.print(F("kg"));
-  Serial.print(F(","));
+  if (setting_unit_reading_enable == true){
+    Serial.print(currentReading, setting_decimal_places);
+    Serial.print(F(","));
+    if (setting_units == UNITS_LBS) Serial.print(F("lbs"));
+    if (setting_units == UNITS_KG) Serial.print(F("kg"));
+    Serial.print(F(","));
+  }
 
   //Print raw reading
   if (setting_raw_reading_enable == true)

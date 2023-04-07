@@ -7,7 +7,7 @@ with open("LoadCell\config.json","r") as read_file:
     config = json.load(read_file)
     tare = config['tare']
 
-N = 1000.0 # number of samples to average
+N = 1000 # number of samples to average
 
 total = 0
 
@@ -34,6 +34,7 @@ for i in range(N):
     line = ser.readline()
     line = line.decode("utf-8")[:-2] # strips it down to just the line content
     reading = int(line[:-1]) # trim the comma at the end
+    print("{:5d}: {:8d}".format(i,reading))
     total += reading - tare
 
 average = total / N

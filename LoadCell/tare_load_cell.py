@@ -6,7 +6,7 @@ with open("LoadCell\config.json","r") as read_file:
     config = json.load(read_file)
 
 N = 1000 # number of samples to average
-WAIT_TIME = 12 # wait some amount of time before starting to take measurements for taring
+WAIT_TIME = 120 # wait some amount of time before starting to take measurements for taring
 
 total = 0
 

@@ -15,7 +15,8 @@ START_TIME = time()
 
 print("Taking first {:d} seconds to let load cell creep happen. This will lead to a more accurate tare value.".format(WAIT_TIME))
 while time() - START_TIME <= WAIT_TIME:
-    line = ser.readline().decode("utf-8")[:-2] # remove newline at end
+    # line = ser.readline().decode("utf-8")[:-2] # remove newline at end
+    line = ser.readline() # remove newline at end
     print(line)
 ser.reset_input_buffer() # and clear any extra lines that may have been generated, we don't need them
 

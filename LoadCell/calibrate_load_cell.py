@@ -3,9 +3,12 @@ from time import time
 import json
 import re
 
-with open("LoadCell\config.json","r") as read_file:
-    config = json.load(read_file)
-    tare = config['tare']
+try:
+	with open("LoadCell\config.json","r") as read_file:
+		config = json.load(read_file)
+		tare = config['tare']
+except:
+	config = {"tare":0}
 
 N = 1000 # number of samples to average
 

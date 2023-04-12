@@ -2,8 +2,11 @@ import serial
 from time import time
 import json
 
-with open("LoadCell\config.json","r") as read_file:
-    config = json.load(read_file)
+try:
+	with open("LoadCell\config.json","r") as read_file:
+		config = json.load(read_file)
+except:
+	config = {}
 
 N = 1000 # number of samples to average
 WAIT_TIME = 120 # wait some amount of time before starting to take measurements for taring
@@ -11,9 +14,9 @@ WAIT_TIME = 120 # wait some amount of time before starting to take measurements 
 total = 0
 
 ser = serial.Serial("COM5",115200)
-START_TIME = time()
 
 print("Taking first {:d} seconds to let load cell creep happen. This will lead to a more accurate tare value.".format(WAIT_TIME))
+START_TIME = time()
 while time() - START_TIME <= WAIT_TIME:
     # line = ser.readline().decode("utf-8")[:-2] # remove newline at end
     line = ser.readline() # remove newline at end

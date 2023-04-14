@@ -40,8 +40,11 @@ class OpenScale:
                 int: the load cell reading in that line
         """
         numString = serial_line.decode("utf-8")[:-3]  # just get the actual content
-        reading = int(numString)
-        return reading
+        try:
+            reading = int(numString)
+            return reading
+        except:
+            return None
 
     def reading_to_units(self, reading: int) -> float:
         """Takes in raw load cell reading and returns calibrated measurement
@@ -49,9 +52,13 @@ class OpenScale:
         Args:
                 reading (int): raw value from load cell input
 
+        Raises:
+            Exception: If load cell has not been calibrated, cannot give a calibrated measurement.
+
         Returns:
                 float: calibrated measurement in units the load cell is calibrated to
         """
+
         if (
             ("tare" not in self.config)
             or ("calibration" not in self.config)
@@ -60,6 +67,8 @@ class OpenScale:
             raise Exception(
                 "Load cell has not been calibrated, cannot report a calibrated measurement."
             )
+        if reading == None:
+            return None
         return (reading - self.tare_value) / self.calibration
 
     def get_reading(self) -> int:
@@ -68,7 +77,7 @@ class OpenScale:
         Returns:
             int: raw reading from OpenScale
         """
-        return self.ser_to_reading(self.get_line())
+        return OpenScale.ser_to_reading(self.get_line())
 
     def get_calibrated_measurement(self) -> float:
         """Grabs the next serial line and returns the calibrated measurement
@@ -129,7 +138,9 @@ class OpenScale:
         self.tare_value = tare_value
         return tare_value
 
-    def calibrate(self, N: int = 1000, report_duration: int = 10) -> float:
+    def calibrate(
+        self, tare_first: bool = False, N: int = 1000, report_duration: int = 10
+    ) -> float:
         """Performs calibration of load cell
 
         Args:
@@ -145,8 +156,10 @@ class OpenScale:
             or ("units" not in self.config)
         ):
             print("Load cell has not been tared, will now perform taring.")
+            tare_first = True
+        if tare_first:
             input(
-                "Please remove any weights you had placed for taring. Press enter to being taring process."
+                "Please remove any weights you had placed. Press enter to being taring process."
             )
             self.tare(N=N)
             print("Taring complete. Now to calibrate.")
@@ -187,12 +200,15 @@ class OpenScale:
         input(
             "You should now change the weights. For the next 10 seconds, I will print out the weight I am measuring. Press enter to begin."
         )
+        self.flush_old_lines()
 
         START_TIME = time()
         while time() - START_TIME <= report_duration:
             # reading = int(ser.readline().decode("utf-8")[:-3])
             # weight = -(reading - self.tare_value) / calibration
             weight = -self.get_calibrated_measurement()
+            if weight is None:  # if startup garbage not gone yet
+                continue
             print("{:.2f}{:}".format(weight, units))
 
         return calibration

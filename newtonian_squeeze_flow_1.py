@@ -297,9 +297,15 @@ def actuator_thread():
         )  # Pa.s
 
         # Set velocity based on force, gap, and viscosity guess
-        # v_new = -2*gap**3 * grams_to_N(target) / (3*math.pi * R**4 * eta_guess) * 1000 # mm/s
-        v_new = target / force * get_vel_mms()
-        #   these two lines are equivalent, it works because force and velocity are linearly proportional
+        v_new = (
+            -2
+            * gap**3
+            * grams_to_N(target)
+            / (3 * math.pi * HAMMER_RADIUS**4 * eta_guess)
+            * 1000
+        )  # mm/s
+        # v_new = target / force * get_vel_mms()
+        # #   these two lines are equivalent, it works because force and velocity are linearly proportional
         set_vel_mms(v_new)
 
         old_error = error

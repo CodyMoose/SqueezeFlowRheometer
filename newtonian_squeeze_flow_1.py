@@ -1,10 +1,7 @@
 import serial
-from time import time
 import json
 import threading
 import pytic
-
-# import time
 from time import sleep, time
 import math
 from datetime import datetime
@@ -36,7 +33,6 @@ def ser_to_reading(serial_line: bytes) -> int:
     Returns:
             int: the load cell reading in that line
     """
-    """Takes in raw serial readline line and returns the raw reading reported in that line"""
     numString = serial_line.decode("utf-8")[:-3]  # just get the actual content
     reading = int(numString)
     return reading

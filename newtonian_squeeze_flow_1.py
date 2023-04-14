@@ -6,7 +6,7 @@ from time import sleep, time
 import math
 from datetime import datetime
 import re
-from LoadCell import openscale
+from LoadCell.openscale import OpenScale
 
 # - Initialization -------------------------------------------
 
@@ -51,9 +51,9 @@ def go_home_quiet_down():
     move_to_pos(0)
 
     # De-energize motor and get error status
-    print("entering safe start")
+    print("Entering safe start")
     tic.enter_safe_start()
-    print("deenergizing")
+    print("Deenergizing")
     tic.deenergize()
     print(tic.variables.error_status)
 
@@ -123,7 +123,7 @@ der_error = 0
 int_error = 0
 
 if __name__ == "__main__":
-    scale = openscale.OpenScale()
+    scale = OpenScale()
 
     target_line = input("Enter the target force in [{:}]: ".format(scale.units))
     temp = re.compile("[0-9.]+")
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     gap_line = input("Enter the current gap in [m]: ")
     temp = re.compile("[0-9.]+")
-    res = temp.search(target_line).group(0)
+    res = temp.search(gap_line).group(0)
     start_gap = float(res)
     print("Starting gap is {:.2f}m".format(start_gap))
 
@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
     with open("data/" + csv_name, "a") as datafile:
         datafile.write(
-            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}}), Target Force ({:}), Current Gap (m), Viscosity (Pa.s), Hammer Radius (m), Hammer Area (m^2)\n".format(
+            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Current Gap (m), Viscosity (Pa.s), Hammer Radius (m), Hammer Area (m^2)\n".format(
                 scale.units, scale.units
             )
         )
@@ -208,9 +208,9 @@ def actuator_thread():
     # - Motion Command Sequence ----------------------------------
 
     # Energize Motor
-    print("energizing")
+    print("Energizing")
     tic.energize()
-    print("exiting safe start")
+    print("Exiting safe start")
     tic.exit_safe_start()
 
     approach_velocity = -3  # mm/s, speed to approach bath of fluid at
@@ -239,8 +239,8 @@ def actuator_thread():
         # print("{:6.2f} >=? {:6.2f}".format(get_pos_mm() / 1000.0, start_gap))
         if abs(get_pos_mm() / 1000.0) >= start_gap:
             print("Hit the hard-stop without ever exceeding threshold force, stopping.")
-            move_to_mm(0)
-            break
+            go_home_quiet_down()
+            return
     print("Force threshold met, switching over to force-velocity control.")
 
     gap = get_pos_mm() / 1000.0 + start_gap  # m
@@ -256,14 +256,14 @@ def actuator_thread():
         # Check if force beyond max amount
         if abs(force) > max_force:
             print("Force was too large, stopping.")
-            move_to_mm(0)
-            break
+            go_home_quiet_down()
+            return
 
         # Check if went too far
         if abs(get_pos_mm()) / 1000.0 >= start_gap:
             print("Hit the hard-stop, stopping.")
-            move_to_mm(0)
-            break
+            go_home_quiet_down()
+            return
 
         # Get gap
         gap = get_pos_mm() / 1000.0 + start_gap  # m
@@ -272,7 +272,7 @@ def actuator_thread():
         eta_guess = (
             2
             * gap**3
-            * scale.grams_to_N(force)
+            * OpenScale.grams_to_N(force)
             / (3 * math.pi * HAMMER_RADIUS**4 * -(get_vel_mms() / 1000))
         )  # Pa.s
 
@@ -280,7 +280,7 @@ def actuator_thread():
         v_new = (
             -2
             * gap**3
-            * scale.grams_to_N(target)
+            * OpenScale.grams_to_N(target)
             / (3 * math.pi * HAMMER_RADIUS**4 * eta_guess)
             * 1000
         )  # mm/s

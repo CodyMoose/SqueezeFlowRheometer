@@ -108,6 +108,8 @@ force = 0
 """Current force reading. Positive is a force pushing up on the load cell"""
 target = 0
 """Target force. Positive is a force pushing up on the load cell"""
+dt_force = 0
+"""Time between last two force measurements"""
 start_gap = 0
 """Initial distance away from hard stop."""
 gap = 0
@@ -115,12 +117,19 @@ gap = 0
 eta_guess = 0
 """Estimate of newtonian viscosity of sample"""
 
+error = 0
+"""Positive error means force must increase, so actuator must extend down"""
+der_error = 0
+int_error = 0
+
 if __name__ == "__main__":
-    target_line = input("Enter the target force in [{:}]: ".format(units))
+    scale = openscale.OpenScale()
+
+    target_line = input("Enter the target force in [{:}]: ".format(scale.units))
     temp = re.compile("[0-9.]+")
     res = temp.search(target_line).group(0)
     target = float(res)
-    print("Target force is {:.2f}{:}".format(target, units))
+    print("Target force is {:.2f}{:}".format(target, scale.units))
 
     gap_line = input("Enter the current gap in [m]: ")
     temp = re.compile("[0-9.]+")
@@ -128,14 +137,11 @@ if __name__ == "__main__":
     start_gap = float(res)
     print("Starting gap is {:.2f}m".format(start_gap))
 
-    scale = openscale.OpenScale()
-
     tic = pytic.PyTic()
 
     # Connect to first available Tic Device serial number over USB
     serial_nums = tic.list_connected_device_serial_numbers()
 
-    # print(serial_nums)
     tic.connect_to_serial_number(serial_nums[0])
 
     tic.set_current_limit(576)  # mA, right under the 600mA limit for the actuator
@@ -147,7 +153,6 @@ if __name__ == "__main__":
     tic.halt_and_set_position(0)
 
     with open("data/" + csv_name, "a") as datafile:
-        # with open('data/test_file.csv','a') as datafile:
         datafile.write(
             "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}}), Target Force ({:}), Current Gap (m), Viscosity (Pa.s), Hammer Radius (m), Hammer Area (m^2)\n".format(
                 scale.units, scale.units
@@ -157,7 +162,7 @@ if __name__ == "__main__":
 
 def load_cell_thread():
     """Continuously reads load cell and reports the upward force on the load cell"""
-    global force
+    global force, dt_force, error, der_error, int_error
 
     start_time = time()
 
@@ -165,8 +170,26 @@ def load_cell_thread():
         scale.get_line()
     scale.flush_old_lines()  # and get rid of any others that were generated when we were busy setting up
 
+    old_error = error
+    """Error from previous frame, used for derivative & integral calculation"""
+
+    cur_time = time()
+    prev_time = cur_time
     while True:
         force = scale.get_calibrated_measurement()
+
+        prev_time = cur_time
+        cur_time = time()
+        dt_force = cur_time - prev_time
+
+        # old_error = error
+        error = target - force
+        # int_error += (
+        #     ((old_error + error) / 2 * dt_force) if dt_force > 0 else int_error
+        # )  # trapezoidal integration
+        # der_error = (
+        #     ((error - old_error) / dt_force) if dt_force > 0 else 0
+        # )  # first order backwards difference
 
         if (time() - start_time) >= 2000 or (
             (not ac.is_alive()) and (not b.is_alive()) and (time() - start_time) > 1
@@ -196,20 +219,11 @@ def actuator_thread():
 
     backoff_velocity = 1  # mm/s
 
-    upper_limit = -100
-    lower_limit = -start_gap * 100
-
-    error = 0
-    """Positive error means force must increase, so actuator must extend down"""
-    old_error = 0
-    """Error from previous frame, used for derivative & integral calculation"""
-    # int_error = 0
-    # '''Integrated error - TODO: implement error accumulation and also limiting'''
-    # der_error = 0
-    # '''Time derivative of error - TODO: implement finite difference scheme to approximate derivative. Maybe just 1st order backward'''
+    # upper_limit = -100
+    # lower_limit = -start_gap * 100
 
     # K_P = 0.1
-    # '''Proportional control coefficient for error in grams to speed in mm/s'''
+    # """Proportional control coefficient for error in grams to speed in mm/s"""
     # K_I = 0
     # K_D = 0.01
 
@@ -270,25 +284,18 @@ def actuator_thread():
             / (3 * math.pi * HAMMER_RADIUS**4 * eta_guess)
             * 1000
         )  # mm/s
-        # v_new = target / force * get_vel_mms()
-        # #   these two lines are equivalent, it works because force and velocity are linearly proportional
         set_vel_mms(v_new)
-
-        old_error = error
-        error = target - force
-        # int_error = (int_error + (old_error + error)/2 * dt) if dt > 0 else int_error # trapezoidal integration
-        # der_error = 0.5*der_error + (((error - old_error)/dt) if dt > 0 else 0) # first order backwards difference
 
         out_str = "{:6.2f}{:}, err = {:6.2f}, pos = {:6.2f}, ".format(
             force, scale.units, error, get_pos_mm()
         )
 
         # vel_P = -K_P * error
-        # '''Proportional component of velocity response'''
+        # """Proportional component of velocity response"""
         # vel_I = -K_I * int_error
-        # '''Integral component of velocity response'''
+        # """Integral component of velocity response"""
         # vel_D = -K_D * der_error
-        # '''Derivative component of velocity response'''
+        # """Derivative component of velocity response"""
         # vel = vel_P + vel_D + vel_I
         # set_vel_mms(vel)
 

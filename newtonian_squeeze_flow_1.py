@@ -145,6 +145,10 @@ target = 0
 """Target force. Positive is a force pushing up on the load cell"""
 start_gap = 0
 """Initial distance away from hard stop."""
+gap = 0
+"""Current gap between hammer and hard stop"""
+eta_guess = 0
+"""Estimate of newtonian viscosity of sample"""
 
 if __name__ == "__main__":
     target_line = input("Enter the target force in [{:}]: ".format(units))
@@ -180,7 +184,7 @@ if __name__ == "__main__":
     with open("data/" + csv_name, "a") as datafile:
         # with open('data/test_file.csv','a') as datafile:
         datafile.write(
-            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force (g), Target Force (g), Hammer Radius (m), Hammer Area (m^2)\n"
+            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force (g), Target Force (g), Current Gap (m), Viscosity (Pa.s), Hammer Radius (m), Hammer Area (m^2)\n"
         )
 
 
@@ -207,6 +211,7 @@ def load_cell_thread():
 
 def actuator_thread():
     """Drives actuator"""
+    global gap, eta_guess
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -221,6 +226,7 @@ def actuator_thread():
 
     approach_velocity = -3  # mm/s, speed to approach bath of fluid at
     force_threshold = 0.5  # g, force must exceed this for control system to kick in.
+    max_force = 80  # g, if force greater than this, stop test.
 
     backoff_velocity = 1  # mm/s
 
@@ -246,7 +252,9 @@ def actuator_thread():
     while True:
         # print("{:6.2f} <? {:6.2f}".format(force, force_threshold))
         tic.reset_command_timeout()
-        if force > force_threshold:
+        if abs(force) > max_force:
+            break
+        if abs(force) > force_threshold:
             break
         # print("{:6.2f} >=? {:6.2f}".format(get_pos_mm() / 1000.0, start_gap))
         if abs(get_pos_mm() / 1000.0) >= start_gap:
@@ -255,7 +263,6 @@ def actuator_thread():
             break
     print("Force threshold met, switching over to force-velocity control.")
 
-    eta_guess = 1  # Pa.s
     gap = get_pos_mm() / 1000.0 + start_gap  # m
 
     prev_time = time()
@@ -265,6 +272,12 @@ def actuator_thread():
         cur_time = time()
         dt = cur_time - prev_time
         prev_time = cur_time
+
+        # Check if force beyond max amount
+        if abs(force) > max_force:
+            print("Force was too large, stopping.")
+            move_to_mm(0)
+            break
 
         # Check if went too far
         if abs(get_pos_mm()) / 1000.0 >= start_gap:
@@ -372,6 +385,8 @@ def background():
                 vin_voltage,
                 force,
                 target,
+                gap,
+                eta_guess,
                 HAMMER_RADIUS,
                 HAMMER_AREA,
             ]

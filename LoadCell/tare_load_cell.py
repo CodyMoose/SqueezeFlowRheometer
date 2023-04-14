@@ -3,37 +3,43 @@ from time import time
 import json
 
 try:
-	with open("LoadCell\config.json","r") as read_file:
-		config = json.load(read_file)
+    with open("LoadCell\config.json", "r") as read_file:
+        config = json.load(read_file)
 except:
-	config = {}
+    config = {}
 
-N = 1000 # number of samples to average
-WAIT_TIME = 120 # wait some amount of time before starting to take measurements for taring
+N = 1000  # number of samples to average
+WAIT_TIME = (
+    120  # wait some amount of time before starting to take measurements for taring
+)
 
 total = 0
 
-ser = serial.Serial("COM5",115200)
+ser = serial.Serial("COM5", 115200)
 
-print("Taking first {:d} seconds to let load cell creep happen. This will lead to a more accurate tare value.".format(WAIT_TIME))
+print(
+    "Taking first {:d} seconds to let load cell creep happen. This will lead to a more accurate tare value.".format(
+        WAIT_TIME
+    )
+)
 START_TIME = time()
 while time() - START_TIME <= WAIT_TIME:
     # line = ser.readline().decode("utf-8")[:-2] # remove newline at end
-    line = ser.readline() # remove newline at end
+    line = ser.readline()  # remove newline at end
     print(line)
-ser.reset_input_buffer() # and clear any extra lines that may have been generated, we don't need them
+ser.reset_input_buffer()  # and clear any extra lines that may have been generated, we don't need them
 
 print("Now recording values for taring")
 for i in range(N):
     line = ser.readline().decode("utf-8")
-    line = line[:-2] # strips it down to just the line content
-    reading = int(line[:-1]) # trim the comma at the end
-    print("{:5d}: {:8d}".format(i,reading))
+    line = line[:-2]  # strips it down to just the line content
+    reading = int(line[:-1])  # trim the comma at the end
+    print("{:5d}: {:8d}".format(i, reading))
     total += reading
 
 tare = total / N
 print("The tare value is {:.2f}".format(tare))
 
-config['tare'] = tare
-with open("LoadCell\config.json","w") as write_file:
+config["tare"] = tare
+with open("LoadCell\config.json", "w") as write_file:
     json.dump(config, write_file)

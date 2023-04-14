@@ -1,4 +1,5 @@
 import pytic
+
 # import time
 from time import sleep, time
 import math
@@ -7,11 +8,13 @@ import math
 
 tic = pytic.PyTic()
 
+
 def move_to_pos(pos):
-	tic.set_target_position(pos)
-	while tic.variables.current_position != tic.variables.target_position:
-		sleep(0.1)
-		tic.reset_command_timeout()
+    tic.set_target_position(pos)
+    while tic.variables.current_position != tic.variables.target_position:
+        sleep(0.1)
+        tic.reset_command_timeout()
+
 
 # Connect to first available Tic Device serial number over USB
 serial_nums = tic.list_connected_device_serial_numbers()
@@ -56,8 +59,8 @@ positions = [-1000, -2000, -3000, 0]
 # 		sleep(0.1)
 
 for p in positions:
-	print("moving to: " + str(p))
-	move_to_pos(p)
+    print("moving to: " + str(p))
+    move_to_pos(p)
 
 print("Going to center of stroke")
 center = -2000
@@ -69,11 +72,11 @@ osc_start = time()
 osc_length = 20
 osc_omega = 1
 osc_time = time() - osc_start
-while osc_time < osc_length: 
-	osc_time = time() - osc_start
-	osc_pos = osc_mag * math.sin(osc_omega * osc_time) + center
-	tic.set_target_position(math.floor(osc_pos))
-	tic.reset_command_timeout() # you have to give it a heartbeat at least every second
+while osc_time < osc_length:
+    osc_time = time() - osc_start
+    osc_pos = osc_mag * math.sin(osc_omega * osc_time) + center
+    tic.set_target_position(math.floor(osc_pos))
+    tic.reset_command_timeout()  # you have to give it a heartbeat at least every second
 
 print("going back to zero")
 move_to_pos(0)

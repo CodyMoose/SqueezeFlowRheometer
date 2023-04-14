@@ -6,6 +6,7 @@ from time import sleep, time
 import math
 from datetime import datetime
 import re
+from LoadCell import openscale
 
 # - Initialization -------------------------------------------
 
@@ -16,38 +17,6 @@ csv_name = date_str + "_" + "newtonain_squeeze_flow_1" + "-data.csv"
 
 HAMMER_RADIUS = 25e-3  # m
 HAMMER_AREA = math.pi * HAMMER_RADIUS**2  # m^2
-
-with open("LoadCell\config.json", "r") as read_file:
-    config = json.load(read_file)
-    tare = config["tare"]
-    calibration = config["calibration"]
-    units = config["units"]
-
-
-def ser_to_reading(serial_line: bytes) -> int:
-    """Takes in serial line and returns raw reading reported therein
-
-    Args:
-            serial_line (bytes): a line of load cell serial input
-
-    Returns:
-            int: the load cell reading in that line
-    """
-    numString = serial_line.decode("utf-8")[:-3]  # just get the actual content
-    reading = int(numString)
-    return reading
-
-
-def reading_to_units(reading: int) -> float:
-    """Takes in raw load cell reading and returns calibrated measurement
-
-    Args:
-            reading (int): raw value from load cell input
-
-    Returns:
-            float: calibrated measurement in units the load cell is calibrated to
-    """
-    return (reading - tare) / calibration
 
 
 def move_to_pos(pos: int):
@@ -159,7 +128,7 @@ if __name__ == "__main__":
     start_gap = float(res)
     print("Starting gap is {:.2f}m".format(start_gap))
 
-    ser = serial.Serial("COM5", 115200)
+    scale = openscale.OpenScale()
 
     tic = pytic.PyTic()
 
@@ -180,7 +149,9 @@ if __name__ == "__main__":
     with open("data/" + csv_name, "a") as datafile:
         # with open('data/test_file.csv','a') as datafile:
         datafile.write(
-            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force (g), Target Force (g), Current Gap (m), Viscosity (Pa.s), Hammer Radius (m), Hammer Area (m^2)\n"
+            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}}), Target Force ({:}), Current Gap (m), Viscosity (Pa.s), Hammer Radius (m), Hammer Area (m^2)\n".format(
+                scale.units, scale.units
+            )
         )
 
 
@@ -191,12 +162,11 @@ def load_cell_thread():
     start_time = time()
 
     for i in range(10):  # get rid of first few lines that aren't readings
-        ser.readline()
-    ser.reset_input_buffer()  # and get rid of any others that were generated when we were busy setting up
+        scale.get_line()
+    scale.flush_old_lines()  # and get rid of any others that were generated when we were busy setting up
 
     while True:
-        reading = ser_to_reading(ser.readline())
-        force = reading_to_units(reading)
+        force = scale.get_calibrated_measurement()
 
         if (time() - start_time) >= 2000 or (
             (not ac.is_alive()) and (not b.is_alive()) and (time() - start_time) > 1
@@ -288,7 +258,7 @@ def actuator_thread():
         eta_guess = (
             2
             * gap**3
-            * grams_to_N(force)
+            * scale.grams_to_N(force)
             / (3 * math.pi * HAMMER_RADIUS**4 * -(get_vel_mms() / 1000))
         )  # Pa.s
 
@@ -296,7 +266,7 @@ def actuator_thread():
         v_new = (
             -2
             * gap**3
-            * grams_to_N(target)
+            * scale.grams_to_N(target)
             / (3 * math.pi * HAMMER_RADIUS**4 * eta_guess)
             * 1000
         )  # mm/s
@@ -310,7 +280,7 @@ def actuator_thread():
         # der_error = 0.5*der_error + (((error - old_error)/dt) if dt > 0 else 0) # first order backwards difference
 
         out_str = "{:6.2f}{:}, err = {:6.2f}, pos = {:6.2f}, ".format(
-            force, units, error, get_pos_mm()
+            force, scale.units, error, get_pos_mm()
         )
 
         # vel_P = -K_P * error

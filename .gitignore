@@ -4,3 +4,4 @@ LoadCell/data/
 LoadCell/config.json
 LoadCell/config.json
 *.pyc
+.vscode/*

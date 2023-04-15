@@ -1,4 +1,4 @@
-import openscale
+from openscale import OpenScale
 
-scale = openscale.OpenScale()
+scale = OpenScale()
 scale.tare()

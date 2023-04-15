@@ -1,5 +1,3 @@
-import serial
-import json
 import threading
 import pytic
 from time import sleep, time
@@ -134,8 +132,16 @@ if __name__ == "__main__":
     gap_line = input("Enter the current gap in [m]: ")
     temp = re.compile("[0-9.]+")
     res = temp.search(gap_line).group(0)
-    start_gap = float(res)
-    print("Starting gap is {:.2f}m".format(start_gap))
+    start_gap = abs(float(res))
+    print("Starting gap is {:.2f}mm".format(start_gap))
+
+    weight = None
+    while weight is None:
+        weight = scale.get_calibrated_measurement()
+    if abs(weight) > 0.5:
+        ans = input("The load cell is out of tare! Do you want to tare it now? (y/n) ")
+        if ans == "y":
+            scale.tare()
 
     tic = pytic.PyTic()
 
@@ -144,10 +150,12 @@ if __name__ == "__main__":
 
     tic.connect_to_serial_number(serial_nums[0])
 
+    tic.set_step_mode(4)
+    microstep_ratio = 2**tic.variables.step_mode  # how many microsteps per full step
     tic.set_current_limit(576)  # mA, right under the 600mA limit for the actuator
-    tic.set_max_decel(200000)
-    tic.set_max_accel(200000)
-    tic.set_max_speed(5000000)  # 5mm/s
+    tic.set_max_decel(200000 * microstep_ratio)
+    tic.set_max_accel(200000 * microstep_ratio)
+    tic.set_max_speed(5000000 * microstep_ratio)  # 5mm/s
 
     # Zero current motor position
     tic.halt_and_set_position(0)
@@ -234,16 +242,16 @@ def actuator_thread():
         tic.reset_command_timeout()
         if abs(force) > max_force:
             break
-        if abs(force) > force_threshold:
+        if force > force_threshold:
             break
         # print("{:6.2f} >=? {:6.2f}".format(get_pos_mm() / 1000.0, start_gap))
-        if abs(get_pos_mm() / 1000.0) >= start_gap:
+        if abs(get_pos_mm()) >= start_gap:
             print("Hit the hard-stop without ever exceeding threshold force, stopping.")
             go_home_quiet_down()
             return
     print("Force threshold met, switching over to force-velocity control.")
 
-    gap = get_pos_mm() / 1000.0 + start_gap  # m
+    gap = (get_pos_mm() + start_gap) / 1000.0  # m
 
     prev_time = time()
     cur_time = time()
@@ -260,13 +268,13 @@ def actuator_thread():
             return
 
         # Check if went too far
-        if abs(get_pos_mm()) / 1000.0 >= start_gap:
+        if abs(get_pos_mm()) >= start_gap:
             print("Hit the hard-stop, stopping.")
             go_home_quiet_down()
             return
 
         # Get gap
-        gap = get_pos_mm() / 1000.0 + start_gap  # m
+        gap = (get_pos_mm() + start_gap) / 1000.0  # m
 
         # Guess viscosity
         eta_guess = (

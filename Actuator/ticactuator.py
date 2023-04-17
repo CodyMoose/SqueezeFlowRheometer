@@ -4,12 +4,17 @@ import math
 
 
 class TicActuator(pytic.Pytic):
-    def __init__(self, step_size: float = 0.01, step_mode: int = 0):
-        """_summary_
+    """Wrapper for existing pytic package, but with useful helper functions to allow operations in coherent units"""
+
+    def __init__(
+        self, step_size: float = 0.01, step_mode: int = 0, current_limit: int = 576
+    ):
+        """Handler for actuator operations, includes helper fucntions to enable using coherent units
 
         Args:
             step_size (float, optional): Size of actuator's full step in mm. Defaults to 0.01.
             step_mode (int, optional): Microstepping mode. Defaults to 0 (full steps).
+            current_limit (int, optional): Current limit in mA. Defaults to 576.
         """
         pytic.Pytic.__init__(self)
 
@@ -17,6 +22,7 @@ class TicActuator(pytic.Pytic):
         self.microstep_ratio = 1
 
         self.set_step_mode(step_mode)
+        self.set_current_limit(current_limit)
 
         # Connect to first available Tic Device serial number over USB
         serial_nums = self.list_connected_device_serial_numbers()
@@ -195,3 +201,21 @@ class TicActuator(pytic.Pytic):
         super().set_step_mode(step_mode)
         self.microstep_ratio = 2**self.variables.step_mode
         return self.microstep_ratio
+
+    def heartbeat(self):
+        """Resets command timeout back to 1 second. Call this at least every second to prevent actuator stopping.
+        Alias for reset_command_timeout() because heartbeat is easier to remember.
+        """
+        self.reset_command_timeout()
+
+    def go_home_quiet_down(self):
+        """Returns actuator to zero position, enters safe start, de-energizes, and reports any errors"""
+        print("Going to zero")
+        self.move_to_pos(0)
+
+        # De-energize motor and get error status
+        print("Entering safe start")
+        self.enter_safe_start()
+        print("Deenergizing")
+        self.deenergize()
+        print(self.variables.error_status)

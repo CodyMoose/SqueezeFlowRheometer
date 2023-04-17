@@ -398,4 +398,4 @@ b = threading.Thread(name="background", target=background)
 
 lc.start()
 ac.start()
-# b.start()
+b.start()

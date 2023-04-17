@@ -1,3 +1,4 @@
+import json
 import threading
 import pytic
 from time import sleep, time
@@ -12,6 +13,7 @@ date = datetime.now()
 date_str = date.strftime("%Y-%m-%d_%H-%M-%S")
 """timestamp string for experiment start time in yyyy-mm-dd_HH:MM:SS format"""
 csv_name = date_str + "_" + "find_gap" + "-data.csv"
+config_path = "LoadCell\config.json"
 
 HAMMER_RADIUS = 25e-3  # m
 HAMMER_AREA = math.pi * HAMMER_RADIUS**2  # m^2
@@ -277,7 +279,18 @@ def actuator_thread():
             tic.reset_command_timeout()
 
     mean_gap = sum(gap_list) / N_find
-    print("The mean gap is {:f}".format(mean_gap))
+    print("The mean gap is {:f}mm".format(mean_gap))
+
+    # Save gap in config file
+    try:
+        with open(config_path, "r") as read_file:
+            config = json.load(read_file)
+    except:
+        config = {}
+    config["gap"] = mean_gap / 1000.0
+    with open(config_path, "w") as write_file:
+        json.dump(config, write_file)
+
     go_home_quiet_down()
     print("Done with actuator")
 
@@ -350,4 +363,4 @@ b = threading.Thread(name="background", target=background)
 
 lc.start()
 ac.start()
-# b.start()
+b.start()

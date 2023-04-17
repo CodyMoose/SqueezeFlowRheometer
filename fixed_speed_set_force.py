@@ -10,6 +10,8 @@ import math
 from datetime import datetime
 import re
 
+from Actuator.ticactuator import TicActuator
+
 # - Initialization -------------------------------------------
 
 date = datetime.now()
@@ -38,43 +40,6 @@ def reading_to_units(reading):
     return (reading - tare) / calibration
 
 
-def move_to_pos(pos):
-    tic.set_target_position(pos)
-    while tic.variables.current_position != tic.variables.target_position:
-        sleep(0.1)
-        tic.reset_command_timeout()
-
-
-def go_home_quiet_down():
-    """Returns actuator to zero position, enters safe start, de-energizes, and reports any errors"""
-    print("Going to zero")
-    move_to_pos(0)
-
-    # De-energize motor and get error status
-    print("entering safe start")
-    tic.enter_safe_start()
-    print("deenergizing")
-    tic.deenergize()
-    print(tic.variables.error_status)
-
-
-def set_vel_mms(vel_mms):
-    """Sets actuator target velocity to vel_mms - the desired velocity in mm/s as a floating point number,
-    returns vel - an integer velocity in steps/10,000s"""
-    # sm = tic.variables.step_mode
-    vel = math.floor(vel_mms * 1000000 * 2**tic.variables.step_mode)
-    tic.set_target_velocity(vel)
-    return vel
-
-
-def get_pos_mm():
-    """Moves to pos_mm - the desired position in mm as a floating point,
-    returns pos - an integer position in steps"""
-    # sm = tic.variables.step_mode
-    pos = tic.variables.current_position / 100.0 * 2**-tic.variables.step_mode
-    return pos
-
-
 force = 0
 """Current force reading. Positive is a force pushing up on the load cell"""
 target = 0
@@ -89,23 +54,13 @@ if __name__ == "__main__":
 
     ser = serial.Serial("COM5", 115200)
 
-    tic = pytic.PyTic()
-
-    # Connect to first available Tic Device serial number over USB
-    serial_nums = tic.list_connected_device_serial_numbers()
-
-    # print(serial_nums)
-    tic.connect_to_serial_number(serial_nums[0])
-
-    tic.set_current_limit(
-        576
-    )  # set limit to 576mA, right under the 600mA limit for the actuator
-    tic.set_max_decel(200000)
-    tic.set_max_accel(200000)
-    tic.set_max_speed(5000000)  # 10mm/s
+    actuator = TicActuator(step_mode=4)
+    actuator.set_max_accel_mmss(20, True)
+    actuator.set_max_speed_mms(5)
 
     # Zero current motor position
-    tic.halt_and_set_position(0)
+    actuator.halt_and_set_position(0)
+    actuator.heartbeat()
 
     # with open('data/'+csv_name,'a') as datafile:
     # # with open('data/test_file.csv','a') as datafile:
@@ -135,9 +90,9 @@ def actuator_thread():
 
     # Energize Motor
     print("energizing")
-    tic.energize()
+    actuator.energize()
     print("exiting safe start")
-    tic.exit_safe_start()
+    actuator.exit_safe_start()
 
     threshold = 0.5
     vel_mag = 1  # mm/s
@@ -145,29 +100,29 @@ def actuator_thread():
     upper_limit = -100
     lower_limit = -4000
     while True:
-        out_str = "{:6.2f}{:}, {:6.2f}, ".format(force, units, get_pos_mm())
+        out_str = "{:6.2f}{:}, {:6.2f}, ".format(force, units, actuator.get_pos_mm())
         # print(force)
         if force - target > threshold:
             out_str = out_str + "go up"
-            set_vel_mms(vel_mag)
+            actuator.set_vel_mms(vel_mag)
         elif force - target < -threshold:
             out_str = out_str + "go down"
-            set_vel_mms(-vel_mag)
+            actuator.set_vel_mms(-vel_mag)
         else:
             out_str = out_str + "stay here"
-            set_vel_mms(0)
-        if tic.variables.current_position < lower_limit:
-            set_vel_mms(vel_mag)
+            actuator.set_vel_mms(0)
+        if actuator.variables.current_position < lower_limit:
+            actuator.set_vel_mms(vel_mag)
             out_str = out_str + " - too low overriding ^^^^"
-        if tic.variables.current_position >= upper_limit:
-            set_vel_mms(-vel_mag)
+        if actuator.variables.current_position >= upper_limit:
+            actuator.set_vel_mms(-vel_mag)
             out_str = out_str + " - too high overriding vvvv"
 
         print(out_str)
         # print(force - target)
-        # print(tic.variables.target_position)
-        # print(tic.variables.error_status)
-        tic.reset_command_timeout()
+        # print(actuator.variables.target_position)
+        # print(actuator.variables.error_status)
+        actuator.heartbeat()
 
 
 def background():
@@ -176,17 +131,17 @@ def background():
 
     start_time = time()
     while True:
-        # print(tic)
-        # print(tic.variables)
-        cur_pos = tic.variables.current_position
-        tar_pos = tic.variables.target_position
-        cur_vel = tic.variables.current_velocity
-        tar_vel = tic.variables.target_velocity
-        max_speed = tic.variables.max_speed
-        max_decel = tic.variables.max_decel
-        max_accel = tic.variables.max_accel
-        step_mode = tic.variables.step_mode
-        vin_voltage = tic.variables.vin_voltage
+        # print(actuator)
+        # print(actuator.variables)
+        cur_pos = actuator.variables.current_position
+        tar_pos = actuator.variables.target_position
+        cur_vel = actuator.variables.current_velocity
+        tar_vel = actuator.variables.target_velocity
+        max_speed = actuator.variables.max_speed
+        max_decel = actuator.variables.max_decel
+        max_accel = actuator.variables.max_accel
+        step_mode = actuator.variables.step_mode
+        vin_voltage = actuator.variables.vin_voltage
 
         # print("PSU Voltage:{:6.3f}V	Shunt Voltage:{:9.6f}V	Load Voltage:{:6.3f}V	Power:{:9.6f}W	Current:{:9.6f}A".format((bus_voltage2 + shunt_voltage2),(shunt_voltage2),(bus_voltage2),(power2),(current2)/1000))
         # print("")

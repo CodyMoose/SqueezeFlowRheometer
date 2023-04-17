@@ -5,6 +5,7 @@ import math
 from datetime import datetime
 import re
 from LoadCell.openscale import OpenScale
+from Actuator.ticactuator import TicActuator
 
 # - Initialization -------------------------------------------
 
@@ -15,79 +16,6 @@ csv_name = date_str + "_" + "newtonain_squeeze_flow_1" + "-data.csv"
 
 HAMMER_RADIUS = 25e-3  # m
 HAMMER_AREA = math.pi * HAMMER_RADIUS**2  # m^2
-
-
-def move_to_pos(pos: int):
-    """Moves actuator to desired position, finishes when the actuator reaches the target
-
-    Args:
-            pos (int): target position in steps from zero
-    """
-    tic.set_target_position(pos)
-    while tic.variables.current_position != tic.variables.target_position:
-        sleep(0.1)
-        tic.reset_command_timeout()
-
-
-def move_to_mm(pos_mm: float) -> int:
-    """Moves actuator to desired position in mm
-
-    Args:
-            pos_mm (float): desired position in mm
-
-    Returns:
-            int: corresponding position in actuator's units, steps
-    """
-    pos = math.floor(pos_mm * 100 * 2**tic.variables.step_mode)
-    move_to_pos(pos)
-    return pos
-
-
-def go_home_quiet_down():
-    """Returns actuator to zero position, enters safe start, de-energizes, and reports any errors"""
-    print("Going to zero")
-    move_to_pos(0)
-
-    # De-energize motor and get error status
-    print("Entering safe start")
-    tic.enter_safe_start()
-    print("Deenergizing")
-    tic.deenergize()
-    print(tic.variables.error_status)
-
-
-def set_vel_mms(vel_mms: float) -> int:
-    """Sets actuator target velocity in mm/s
-
-    Args:
-            vel_mms (float): the desired velocity in mm/s
-
-    Returns:
-            int: velocity in the actuator's units, steps/10,000s
-    """
-    vel = math.floor(vel_mms * 1000000 * 2**tic.variables.step_mode)
-    tic.set_target_velocity(vel)
-    return vel
-
-
-def get_pos_mm() -> float:
-    """Gets current actuator position in mm
-
-    Returns:
-            float: current actuator position in mm
-    """
-    pos = tic.variables.current_position / 100.0 * 2**-tic.variables.step_mode
-    return pos
-
-
-def get_vel_mms() -> float:
-    """Gets current actuator velocity in mm/s
-
-    Returns:
-            float: current actuator velocity in mm/s
-    """
-    vel = tic.variables.current_velocity / 1000000 * 2**-tic.variables.step_mode
-    return vel
 
 
 def grams_to_N(f: float) -> float:
@@ -123,6 +51,7 @@ int_error = 0
 if __name__ == "__main__":
     scale = OpenScale()
 
+    # Get test details from user
     target_line = input("Enter the target force in [{:}]: ".format(scale.units))
     temp = re.compile("[0-9.]+")
     res = temp.search(target_line).group(0)
@@ -143,22 +72,13 @@ if __name__ == "__main__":
         if ans == "y":
             scale.tare()
 
-    tic = pytic.PyTic()
-
-    # Connect to first available Tic Device serial number over USB
-    serial_nums = tic.list_connected_device_serial_numbers()
-
-    tic.connect_to_serial_number(serial_nums[0])
-
-    tic.set_step_mode(4)
-    microstep_ratio = 2**tic.variables.step_mode  # how many microsteps per full step
-    tic.set_current_limit(576)  # mA, right under the 600mA limit for the actuator
-    tic.set_max_decel(200000 * microstep_ratio)
-    tic.set_max_accel(200000 * microstep_ratio)
-    tic.set_max_speed(5000000 * microstep_ratio)  # 5mm/s
+    actuator = TicActuator(step_mode=4)
+    actuator.set_max_accel_mmss(20, True)
+    actuator.set_max_speed_mms(5)
 
     # Zero current motor position
-    tic.halt_and_set_position(0)
+    actuator.halt_and_set_position(0)
+    actuator.heartbeat()
 
     with open("data/" + csv_name, "a") as datafile:
         datafile.write(
@@ -217,9 +137,9 @@ def actuator_thread():
 
     # Energize Motor
     print("Energizing")
-    tic.energize()
+    actuator.energize()
     print("Exiting safe start")
-    tic.exit_safe_start()
+    actuator.exit_safe_start()
 
     approach_velocity = -3  # mm/s, speed to approach bath of fluid at
     force_threshold = 0.5  # g, force must exceed this for control system to kick in.
@@ -236,22 +156,22 @@ def actuator_thread():
     # K_D = 0.01
 
     # Start by approaching and waiting until force is non-negligible
-    set_vel_mms(approach_velocity)
+    actuator.set_vel_mms(approach_velocity)
     while True:
         # print("{:6.2f} <? {:6.2f}".format(force, force_threshold))
-        tic.reset_command_timeout()
+        actuator.heartbeat()
         if abs(force) > max_force:
             break
         if force > force_threshold:
             break
         # print("{:6.2f} >=? {:6.2f}".format(get_pos_mm() / 1000.0, start_gap))
-        if abs(get_pos_mm()) >= start_gap:
+        if abs(actuator.get_pos_mm()) >= start_gap:
             print("Hit the hard-stop without ever exceeding threshold force, stopping.")
-            go_home_quiet_down()
+            actuator.go_home_quiet_down()
             return
     print("Force threshold met, switching over to force-velocity control.")
 
-    gap = (get_pos_mm() + start_gap) / 1000.0  # m
+    gap = (actuator.get_pos_mm() + start_gap) / 1000.0  # m
 
     prev_time = time()
     cur_time = time()
@@ -264,24 +184,24 @@ def actuator_thread():
         # Check if force beyond max amount
         if abs(force) > max_force:
             print("Force was too large, stopping.")
-            go_home_quiet_down()
+            actuator.go_home_quiet_down()
             return
 
         # Check if went too far
-        if abs(get_pos_mm()) >= start_gap:
+        if abs(actuator.get_pos_mm()) >= start_gap:
             print("Hit the hard-stop, stopping.")
-            go_home_quiet_down()
+            actuator.go_home_quiet_down()
             return
 
         # Get gap
-        gap = (get_pos_mm() + start_gap) / 1000.0  # m
+        gap = (actuator.get_pos_mm() + start_gap) / 1000.0  # m
 
         # Guess viscosity
         eta_guess = (
             2
             * gap**3
             * OpenScale.grams_to_N(force)
-            / (3 * math.pi * HAMMER_RADIUS**4 * -(get_vel_mms() / 1000))
+            / (3 * math.pi * HAMMER_RADIUS**4 * -(actuator.get_vel_mms() / 1000))
         )  # Pa.s
 
         # Set velocity based on force, gap, and viscosity guess
@@ -292,10 +212,10 @@ def actuator_thread():
             / (3 * math.pi * HAMMER_RADIUS**4 * eta_guess)
             * 1000
         )  # mm/s
-        set_vel_mms(v_new)
+        actuator.set_vel_mms(v_new)
 
         out_str = "{:6.2f}{:}, err = {:6.2f}, pos = {:6.2f}, ".format(
-            force, scale.units, error, get_pos_mm()
+            force, scale.units, error, actuator.get_pos_mm()
         )
 
         # vel_P = -K_P * error
@@ -305,7 +225,7 @@ def actuator_thread():
         # vel_D = -K_D * der_error
         # """Derivative component of velocity response"""
         # vel = vel_P + vel_D + vel_I
-        # set_vel_mms(vel)
+        # actuator.set_vel_mms(vel)
 
         # out_str += "velP = {:6.2f}, velD = {:6.2f}, ".format(vel_P,vel_D)
 
@@ -316,18 +236,18 @@ def actuator_thread():
             out_str += "go faster"
         else:
             out_str += "maintain speed"
-        # if(tic.variables.current_position < lower_limit):
-        # 	set_vel_mms(backoff_velocity)
+        # if(actuator.variables.current_position < lower_limit):
+        # 	actuator.set_vel_mms(backoff_velocity)
         # 	out_str += " - too low overriding ^^^^"
-        # if(tic.variables.current_position >= upper_limit):
-        # 	set_vel_mms(-backoff_velocity)
+        # if(actuator.variables.current_position >= upper_limit):
+        # 	actuator.set_vel_mms(-backoff_velocity)
         # 	out_str += " - too high overriding vvvv"
 
         print(out_str)
         # print(force - target)
-        # print(tic.variables.target_position)
-        # print(tic.variables.error_status)
-        tic.reset_command_timeout()
+        # print(actuator.variables.target_position)
+        # print(actuator.variables.error_status)
+        actuator.heartbeat()
 
 
 def background():
@@ -336,19 +256,19 @@ def background():
 
     start_time = time()
     while True:
-        # print(tic)
-        # print(tic.variables)
-        cur_pos_mm = get_pos_mm()
-        cur_pos = tic.variables.current_position
-        tar_pos = tic.variables.target_position
-        cur_vel_mms = get_vel_mms()
-        cur_vel = tic.variables.current_velocity
-        tar_vel = tic.variables.target_velocity
-        max_speed = tic.variables.max_speed
-        max_decel = tic.variables.max_decel
-        max_accel = tic.variables.max_accel
-        step_mode = tic.variables.step_mode
-        vin_voltage = tic.variables.vin_voltage
+        # print(actuator)
+        # print(actuatorvariables)
+        cur_pos_mm = actuator.get_pos_mm()
+        cur_pos = actuator.variables.current_position
+        tar_pos = actuator.variables.target_position
+        cur_vel_mms = actuator.get_vel_mms()
+        cur_vel = actuator.variables.current_velocity
+        tar_vel = actuator.variables.target_velocity
+        max_speed = actuator.variables.max_speed
+        max_decel = actuator.variables.max_decel
+        max_accel = actuator.variables.max_accel
+        step_mode = actuator.variables.step_mode
+        vin_voltage = actuator.variables.vin_voltage
 
         with open(
             "data/" + csv_name, "a"

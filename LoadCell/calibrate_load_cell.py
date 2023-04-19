@@ -1,4 +1,4 @@
 from openscale import OpenScale
 
 scale = OpenScale()
-scale.calibrate()
+scale.calibrate(N=2000)

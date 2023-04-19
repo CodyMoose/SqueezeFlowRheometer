@@ -46,8 +46,10 @@ eta_guess = 0
 
 error = 0
 """Positive error means force must increase, so actuator must extend down"""
-der_error = 0
 int_error = 0
+"""Time-integrated error"""
+der_error = 0
+"""Time-derivative of error"""
 
 if __name__ == "__main__":
     scale = OpenScale()
@@ -130,6 +132,11 @@ def load_cell_thread():
             ((error - old_error) / dt_force) if dt_force > 0 else 0
         )  # first order backwards difference
 
+        # # Report error values
+        # print("Error            = {:.2f}".format(error))
+        # print("Integrated error = {:.2f}".format(int_error))
+        # print("Derivative error = {:.2f}".format(der_error))
+
         if (time() - start_time) >= 2000 or (
             (not ac.is_alive()) and (not b.is_alive()) and (time() - start_time) > 1
         ):
@@ -139,7 +146,7 @@ def load_cell_thread():
 
 def actuator_thread():
     """Drives actuator"""
-    global gap, eta_guess
+    global gap, eta_guess, error, int_error, der_error
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -321,7 +328,9 @@ def background():
         if (time() - start_time) >= 2000 or (
             (not ac.is_alive()) and (time() - start_time) > 1
         ):
-            print("end of print")
+            print("Time since started: {:.0f}".format(time() - start_time))
+            print("Actuator thread dead? {:}".format(not ac.is_alive()))
+            print("end of background")
             break
 
     print("=" * 20 + " BACKGROUND IS DONE " + "=" * 20)

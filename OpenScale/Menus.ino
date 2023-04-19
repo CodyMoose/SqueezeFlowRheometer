@@ -516,7 +516,7 @@ int calcMinimumReadTime(void)
   scale.get_units(setting_average_amount); //Do a dummy read and time it
   int averageReadTime = ceil((millis() - startTime));
   int sensorReadTime = 0;
-  if (setting_unit_reading_enable == true)
+  if (setting_unit_reading_enable)
   {
     sensorReadTime += averageReadTime;
   }
@@ -528,7 +528,7 @@ int calcMinimumReadTime(void)
   //Calculate number of characters per report
   int characters = 0;
 
-  if (setting_timestamp_enable == true) characters += strlen("51588595,"); //Timestamp has characters
+  if (setting_timestamp_enable) characters += strlen("51588595,"); //Timestamp has characters
 
   if (setting_local_temp_enable)
   {
@@ -554,7 +554,7 @@ int calcMinimumReadTime(void)
     characters += strlen("27.81,"); //Add the time it takes to print the characters as well
   }
 
-  if (setting_unit_reading_enable == true)
+  if (setting_unit_reading_enable)
   {
     characters += strlen("123,"); //Basic weight without decimals
   
@@ -564,7 +564,7 @@ int calcMinimumReadTime(void)
     if (setting_units == UNITS_KG) characters += strlen("kg");
   }
 
-  if (setting_raw_reading_enable == true)
+  if (setting_raw_reading_enable)
   {
     long rawReading = scale.read_average(setting_average_amount); //Take average reading over a given number of times
 

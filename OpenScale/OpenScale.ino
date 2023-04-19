@@ -159,18 +159,18 @@ void loop()
 
   long startTime = millis();
 
-  //Take average of readings with calibration and tare taken into account
-  float currentReading = scale.get_units(setting_average_amount);
-
   //Print time stamp
-  if (setting_timestamp_enable == true)
+  if (setting_timestamp_enable)
   {
     Serial.print(startTime);
     Serial.print(F(","));
   }
 
   //Print calibrated reading
-  if (setting_unit_reading_enable == true){
+  if (setting_unit_reading_enable){
+
+    //Take average of readings with calibration and tare taken into account
+    float currentReading = scale.get_units(setting_average_amount);
     Serial.print(currentReading, setting_decimal_places);
     Serial.print(F(","));
     if (setting_units == UNITS_LBS) Serial.print(F("lbs"));
@@ -179,7 +179,7 @@ void loop()
   }
 
   //Print raw reading
-  if (setting_raw_reading_enable == true)
+  if (setting_raw_reading_enable)
   {
     long rawReading = scale.read_average(setting_average_amount); //Take average reading over a given number of times
 
@@ -188,16 +188,16 @@ void loop()
   }
 
   //Print local temp
-  if (setting_local_temp_enable == true)
+  if (setting_local_temp_enable)
   {
     Serial.print(getLocalTemperature(), setting_decimal_places);
     Serial.print(F(","));
   }
 
   //Print remote temp
-  if (setting_remote_temp_enable == true)
+  if (setting_remote_temp_enable)
   {
-    if (remoteSensorAttached == true)
+    if (remoteSensorAttached)
     {
       Serial.print(getRemoteTemperature(), setting_decimal_places);
       Serial.print(F(","));
@@ -208,7 +208,7 @@ void loop()
     }
   }
 
-  if (setting_status_enable == true) toggleLED();
+  if (setting_status_enable) toggleLED();
 
   Serial.println();
   Serial.flush();

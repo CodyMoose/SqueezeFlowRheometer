@@ -3,7 +3,7 @@ from time import sleep
 import math
 
 
-class TicActuator(pytic.Pytic):
+class TicActuator(pytic.PyTic):
     """Wrapper for existing pytic package, but with useful helper functions to allow operations in coherent units"""
 
     def __init__(

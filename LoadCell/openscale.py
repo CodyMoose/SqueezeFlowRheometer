@@ -44,6 +44,7 @@ class OpenScale:
             reading = int(numString)
             return reading
         except:
+            print(serial_line)
             return None
 
     def reading_to_units(self, reading: int) -> float:
@@ -79,6 +80,12 @@ class OpenScale:
         """
         return OpenScale.ser_to_reading(self.get_line())
 
+    def wait_for_reading(self) -> int:
+        reading = None
+        while reading is None:
+            reading = self.get_reading()
+        return reading
+
     def get_calibrated_measurement(self) -> float:
         """Grabs the next serial line and returns the calibrated measurement
 
@@ -86,6 +93,17 @@ class OpenScale:
             float: force measurement in units chosen during calibration
         """
         return self.reading_to_units(self.get_reading())
+
+    def wait_for_calibrated_measurement(self) -> float:
+        """Waits for the next valid reading and returns the calibrated measurement
+
+        Returns:
+            float: force measurement in units chosen during calibration
+        """
+        meas = None
+        while meas is None:
+            meas = self.reading_to_units(self.wait_for_reading())
+        return meas
 
     def grams_to_N(f: float) -> float:
         """Takes in force in grams and converts to Newtons
@@ -118,13 +136,15 @@ class OpenScale:
         )
         START_TIME = time()
         while time() - START_TIME <= wait_time:
+            remaining = wait_time - (time() - START_TIME)
             line = self.get_line()
-            print(line)
+            print("{:5.1f}: {:}".format(remaining, line))
         self.flush_old_lines()  # and clear any extra lines that may have been generated, we don't need them
 
         print("Now recording values for taring")
         for i in range(N):
-            reading = self.get_reading()
+            # reading = self.get_reading()
+            reading = self.wait_for_reading()
             print("{:5d}: {:8d}".format(i, reading))
             total += reading
 
@@ -186,7 +206,8 @@ class OpenScale:
         self.flush_old_lines()  # and clear any extra lines that may have been generated, we don't need them
 
         for i in range(N):
-            reading = self.get_reading()
+            # reading = self.get_reading()
+            reading = self.wait_for_reading()
             print("{:5d}: {:8d}".format(i, reading))
             total += reading - self.tare_value
 
@@ -207,6 +228,7 @@ class OpenScale:
             # reading = int(ser.readline().decode("utf-8")[:-3])
             # weight = -(reading - self.tare_value) / calibration
             weight = -self.get_calibrated_measurement()
+            weight = -self.wait_for_calibrated_measurement()
             if weight is None:  # if startup garbage not gone yet
                 continue
             print("{:.2f}{:}".format(weight, units))

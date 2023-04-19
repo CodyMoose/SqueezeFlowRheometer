@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
     weight = None
     while weight is None:
-        weight = scale.get_calibrated_measurement()
+        weight = scale.wait_for_calibrated_measurement()
     if abs(weight) > 0.5:
         ans = input("The load cell is out of tare! Do you want to tare it now? (y/n) ")
         if ans == "y":
@@ -111,7 +111,7 @@ def load_cell_thread():
     cur_time = time()
     prev_time = cur_time
     while True:
-        force = scale.get_calibrated_measurement()
+        force = scale.wait_for_calibrated_measurement()
 
         prev_time = cur_time
         cur_time = time()

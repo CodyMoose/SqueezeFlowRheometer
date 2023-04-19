@@ -60,7 +60,19 @@ class TicActuator(PyTic):
         Returns:
                 float: current actuator position in mm
         """
-        pos = self.steps_to_mm(self.variables.current_position)
+        # print("hellooooo")
+        # print(self.variables)
+        # print(self.variables.current_position)
+        p = None
+        while p is None:
+            try:
+                p = self.variables.current_position
+            except:
+                p = None
+            else:
+                break
+        # pos = self.steps_to_mm(self.variables.current_position)
+        pos = self.steps_to_mm(p)
         return pos
 
     def move_to_pos(self, pos: int):

@@ -1,9 +1,9 @@
-import pytic
+from pytic import PyTic
 from time import sleep
 import math
 
 
-class TicActuator(pytic.PyTic):
+class TicActuator(PyTic):
     """Wrapper for existing pytic package, but with useful helper functions to allow operations in coherent units"""
 
     def __init__(
@@ -16,17 +16,19 @@ class TicActuator(pytic.PyTic):
             step_mode (int, optional): Microstepping mode. Defaults to 0 (full steps).
             current_limit (int, optional): Current limit in mA. Defaults to 576.
         """
-        pytic.Pytic.__init__(self)
-
-        self.step_size = step_size  ## mm/step
-        self.microstep_ratio = 1
-
-        self.set_step_mode(step_mode)
-        self.set_current_limit(current_limit)
+        super().__init__()
 
         # Connect to first available Tic Device serial number over USB
         serial_nums = self.list_connected_device_serial_numbers()
         self.connect_to_serial_number(serial_nums[0])
+
+        self.step_size = step_size  ## mm/step
+        self.microstep_ratio = 1
+
+        self.my_set_step_mode(
+            step_mode
+        )  # have to use own method because the superclass sets its own attributes on super().__init__()
+        self.set_current_limit(current_limit)
 
     def steps_to_mm(self, val: float) -> float:
         """Converts microsteps to mm
@@ -187,7 +189,7 @@ class TicActuator(pytic.PyTic):
         self.set_max_accel(max_decel)
         return max_decel
 
-    def set_step_mode(self, step_mode: int = 0) -> int:
+    def my_set_step_mode(self, step_mode: int = 0) -> int:
         """Sets actuator's fractional stepping mode
 
         Args:
@@ -198,7 +200,7 @@ class TicActuator(pytic.PyTic):
         """
         if step_mode < 0:
             return self.microstep_ratio
-        super().set_step_mode(step_mode)
+        self.set_step_mode(step_mode)
         self.microstep_ratio = 2**self.variables.step_mode
         return self.microstep_ratio
 

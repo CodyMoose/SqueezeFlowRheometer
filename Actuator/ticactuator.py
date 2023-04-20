@@ -22,6 +22,9 @@ class TicActuator(PyTic):
         serial_nums = self.list_connected_device_serial_numbers()
         self.connect_to_serial_number(serial_nums[0])
 
+        if self.variables.vin_voltage < 7000:
+            input("Wait! You didn't turn the power on for the actuator! Do that now.")
+
         self.step_size = step_size  ## mm/step
         self.microstep_ratio = 1
 

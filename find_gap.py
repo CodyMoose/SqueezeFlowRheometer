@@ -187,7 +187,7 @@ def actuator_thread():
             # print(actuator.variables.error_status)
             actuator.heartbeat()
 
-    mean_gap = sum(gap_list) / N_find
+    mean_gap = abs(sum(gap_list) / N_find)
     print("The mean gap is {:f}mm".format(mean_gap))
 
     # Save gap in config file
@@ -196,7 +196,7 @@ def actuator_thread():
             config = json.load(read_file)
     except:
         config = {}
-    config["gap"] = mean_gap / 1000.0
+    config["gap"] = mean_gap
     with open(config_path, "w") as write_file:
         json.dump(config, write_file)
 

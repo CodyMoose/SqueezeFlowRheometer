@@ -227,6 +227,12 @@ def actuator_thread():
             actuator.go_home_quiet_down()
             return
 
+        # Check if returned towards zero too far
+        if abs(actuator.get_pos_mm()) <= 1:
+            print("Returned too close to home, stopping.")
+            actuator.go_home_quiet_down()
+            return
+
         # Get gap
         gap = (actuator.get_pos_mm() + start_gap) / 1000.0  # m
 

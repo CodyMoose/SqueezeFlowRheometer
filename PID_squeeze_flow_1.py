@@ -263,7 +263,7 @@ def actuator_thread():
         v_new = vel_P + vel_D + vel_I
         actuator.set_vel_mms(v_new)
 
-        out_str = "{:6.2f}{:}, err = {:6.2f}, errI = {:6.2f}, errD = {:6.2f}, pos = {:6.2f}, v = {:6.2f} : vP = {:6.2f}, vI = {:6.2f}, vD = {:6.2f}".format(
+        out_str = "{:6.2f}{:}, err = {:6.2f}, errI = {:6.2f}, errD = {:7.2f}, pos = {:6.2f}, v = {:6.2f} : vP = {:6.2f}, vI = {:6.2f}, vD = {:6.2f}".format(
             force,
             scale.units,
             error,

@@ -34,21 +34,12 @@ def grams_to_N(f: float) -> float:
 
 force = 0
 """Current force reading. Positive is a force pushing up on the load cell"""
-target = 0
-"""Target force. Positive is a force pushing up on the load cell"""
-dt_force = 0
-"""Time between last two force measurements"""
+FORCE_UP_SIGN = -1
+"""Sign of a positive force. This should be 1 or -1, and is used to compute velocity based on force"""
 start_gap = 0
 """Initial distance away from hard stop."""
 gap = 0
 """Current gap between hammer and hard stop"""
-eta_guess = 0
-"""Estimate of newtonian viscosity of sample"""
-
-error = 0
-"""Positive error means force must increase, so actuator must extend down"""
-der_error = 0
-int_error = 0
 
 if __name__ == "__main__":
     scale = OpenScale()
@@ -75,15 +66,15 @@ if __name__ == "__main__":
 
     with open("data/" + csv_name, "a") as datafile:
         datafile.write(
-            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Current Gap (m), Viscosity (Pa.s), Hammer Radius (m), Hammer Area (m^2)\n".format(
-                scale.units, scale.units
+            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}) Current Gap (m)\n".format(
+                scale.units
             )
         )
 
 
 def load_cell_thread():
     """Continuously reads load cell and reports the upward force on the load cell"""
-    global force, dt_force, error, der_error, int_error
+    global force
 
     start_time = time()
 
@@ -91,17 +82,16 @@ def load_cell_thread():
         scale.get_line()
     scale.flush_old_lines()  # and get rid of any others that were generated when we were busy setting up
 
-    old_error = error
-    """Error from previous frame, used for derivative & integral calculation"""
-
     cur_time = time()
     prev_time = cur_time
+    outlier_threshold = 100
     while True:
-        force = scale.get_calibrated_measurement()
-
-        prev_time = cur_time
-        cur_time = time()
-        dt_force = cur_time - prev_time
+        prelim_force = scale.wait_for_calibrated_measurement() * FORCE_UP_SIGN
+        if abs(prelim_force) > outlier_threshold:
+            continue
+        force = (
+            prelim_force  # once I've thrown away outliers, I can safely set the force.
+        )
 
         if (time() - start_time) >= 2000 or (
             (not ac.is_alive()) and (not b.is_alive()) and (time() - start_time) > 1
@@ -255,11 +245,7 @@ def background():
                 step_mode,
                 vin_voltage,
                 force,
-                target,
                 gap,
-                eta_guess,
-                HAMMER_RADIUS,
-                HAMMER_AREA,
             ]
             dataline = ",".join(map(str, output_params)) + "\n"
             datafile.write(dataline)

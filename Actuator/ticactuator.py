@@ -54,25 +54,29 @@ class TicActuator(PyTic):
         val = val_mm * self.microstep_ratio / self.step_size
         return val
 
+    def get_pos(self) -> int:
+        """Gets current actuator position in microsteps
+
+        Returns:
+                float: current actuator position in microsteps
+        """
+        pos = None
+        while pos is None:
+            try:
+                pos = self.variables.current_position
+            except:
+                pos = None
+            else:
+                break
+        return pos
+
     def get_pos_mm(self) -> float:
         """Gets current actuator position in mm
 
         Returns:
                 float: current actuator position in mm
         """
-        # print("hellooooo")
-        # print(self.variables)
-        # print(self.variables.current_position)
-        p = None
-        while p is None:
-            try:
-                p = self.variables.current_position
-            except:
-                p = None
-            else:
-                break
-        # pos = self.steps_to_mm(self.variables.current_position)
-        pos = self.steps_to_mm(p)
+        pos = self.steps_to_mm(self.get_pos())
         return pos
 
     def move_to_pos(self, pos: int):
@@ -123,6 +127,23 @@ class TicActuator(PyTic):
         vel_mms = self.steps_to_mm(vel) / 10000
         return vel_mms
 
+    def get_vel(self) -> int:
+        """Gets current actuator velocity in microsteps/10,000s
+
+        Returns:
+                float: current actuator velocity in microsteps/10,000s
+        """
+
+        vel = None
+        while vel is None:
+            try:
+                vel = self.variables.current_velocity
+            except:
+                vel = None
+            else:
+                break
+        return vel
+
     def get_vel_mms(self) -> float:
         """Gets current actuator velocity in mm/s
 
@@ -130,15 +151,7 @@ class TicActuator(PyTic):
                 float: current actuator velocity in mm/s
         """
 
-        v = None
-        while v is None:
-            try:
-                v = self.variables.current_velocity
-            except:
-                v = None
-            else:
-                break
-        vel_mms = self.vel_to_mms(v)
+        vel_mms = self.vel_to_mms(self.get_vel())
         return vel_mms
 
     def set_vel_mms(self, vel_mms: float) -> int:

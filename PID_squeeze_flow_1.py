@@ -179,10 +179,10 @@ def actuator_thread():
     # upper_limit = -100
     # lower_limit = -start_gap * 100
 
-    K_P = 0.1
+    K_P = 0.04
     """Proportional control coefficient for error in grams to speed in mm/s"""
-    K_I = 0.001
-    K_D = 0.01
+    K_I = 0.015
+    K_D = 0.0005
 
     # Start by approaching and waiting until force is non-negligible
     actuator.set_vel_mms(approach_velocity)

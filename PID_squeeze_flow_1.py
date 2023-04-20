@@ -30,9 +30,11 @@ def grams_to_N(f: float) -> float:
 
 
 force = 0
-"""Current force reading. Positive is a force pushing up on the load cell"""
+"""Current force reading. Negative is a force pushing up on the load cell"""
 target = 0
-"""Target force. Positive is a force pushing up on the load cell"""
+"""Target force. Negative is a force pushing up on the load cell"""
+FORCE_UP_SIGN = -1
+"""Sign of a positive force. This should be 1 or -1, and is used to compute velocity based on force"""
 dt_force = 0
 """Time between last two force measurements"""
 start_gap = 0
@@ -58,8 +60,8 @@ if __name__ == "__main__":
     target_line = input("Enter the target force in [{:}]: ".format(scale.units))
     temp = re.compile("[0-9.]+")
     res = temp.search(target_line).group(0)
-    target = float(res)
-    print("Target force is {:.2f}{:}".format(target, scale.units))
+    target = -float(res)
+    print("Target force is {:.2f}{:}".format(-target, scale.units))
 
     gap_line = input("Enter the current gap in [mm]: ")
     temp = re.compile("[0-9.]+")
@@ -116,8 +118,17 @@ def load_cell_thread():
 
     cur_time = time()
     prev_time = cur_time
+
+    outlier_threshold = 100  # g, if something is beyond this limit, throw it out
     while True:
-        force = scale.wait_for_calibrated_measurement()
+        # Because they're on separate threads, the actuator thread is able to read outlier forces before I can throw them out!
+        prelim_force = scale.wait_for_calibrated_measurement() * FORCE_UP_SIGN
+        if abs(prelim_force) > outlier_threshold:
+            continue
+        force = (
+            prelim_force  # once I've thrown away outliers, I can safely set the force.
+        )
+        # print("Load  = {:}".format(force))
 
         prev_time = cur_time
         cur_time = time()
@@ -146,7 +157,7 @@ def load_cell_thread():
 
 def actuator_thread():
     """Drives actuator"""
-    global gap, eta_guess, error, int_error, der_error
+    global gap, eta_guess, error, int_error, der_error, sample_volume
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -160,7 +171,7 @@ def actuator_thread():
     actuator.exit_safe_start()
 
     approach_velocity = -3  # mm/s, speed to approach bath of fluid at
-    force_threshold = 1  # g, force must exceed this for control system to kick in.
+    force_threshold = 2  # g, force must exceed this for control system to kick in.
     max_force = 80  # g, if force greater than this, stop test.
 
     backoff_velocity = 1  # mm/s
@@ -180,7 +191,7 @@ def actuator_thread():
         actuator.heartbeat()
         if abs(force) > max_force:
             break
-        if force > force_threshold:
+        if abs(force) > force_threshold:
             break
         # print("{:6.2f} >=? {:6.2f}".format(get_pos_mm(), start_gap))
         if abs(actuator.get_pos_mm()) >= start_gap:
@@ -197,12 +208,14 @@ def actuator_thread():
     prev_time = time()
     cur_time = time()
     while True:
+        # print("another step")
         # Get timestep
         cur_time = time()
         dt = cur_time - prev_time
         prev_time = cur_time
 
         # Check if force beyond max amount
+        print("Force = {:}".format(force))
         if abs(force) > max_force:
             print("Force was too large, stopping.")
             actuator.go_home_quiet_down()
@@ -218,13 +231,18 @@ def actuator_thread():
         gap = (actuator.get_pos_mm() + start_gap) / 1000.0  # m
 
         # Guess Newtonian viscosity
-        eta_guess = abs(
-            2
-            * math.pi
-            * gap**5
-            * OpenScale.grams_to_N(force)
-            / (3 * sample_volume * (actuator.get_vel_mms() / 1000))
-        )  # Pa.s
+        if (
+            sample_volume > 0
+        ):  # viscosity estimates only valid if sample volume is positive
+            eta_guess = abs(
+                2
+                * math.pi
+                * gap**5
+                * OpenScale.grams_to_N(force)
+                / (3 * sample_volume * (actuator.get_vel_mms() / 1000))
+            )  # Pa.s
+        else:
+            eta_guess = 0
 
         # prevent integral windup
         if abs(int_error) > 1000:
@@ -323,7 +341,7 @@ def background():
             datafile.write(dataline)
             # print(dataline)
 
-        sleep(0.1)
+        sleep(0.02)
 
         if (time() - start_time) >= 2000 or (
             (not ac.is_alive()) and (time() - start_time) > 1

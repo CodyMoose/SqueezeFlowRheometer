@@ -129,7 +129,16 @@ class TicActuator(PyTic):
         Returns:
                 float: current actuator velocity in mm/s
         """
-        vel_mms = self.vel_to_mms(self.variables.current_velocity)
+
+        v = None
+        while v is None:
+            try:
+                v = self.variables.current_velocity
+            except:
+                v = None
+            else:
+                break
+        vel_mms = self.vel_to_mms(v)
         return vel_mms
 
     def set_vel_mms(self, vel_mms: float) -> int:

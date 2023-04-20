@@ -60,8 +60,8 @@ if __name__ == "__main__":
     target_line = input("Enter the target force in [{:}]: ".format(scale.units))
     temp = re.compile("[0-9.]+")
     res = temp.search(target_line).group(0)
-    target = -float(res)
-    print("Target force is {:.2f}{:}".format(-target, scale.units))
+    target = float(res)
+    print("Target force is {:.2f}{:}".format(target, scale.units))
 
     gap_line = input("Enter the current gap in [mm]: ")
     temp = re.compile("[0-9.]+")
@@ -215,7 +215,7 @@ def actuator_thread():
         prev_time = cur_time
 
         # Check if force beyond max amount
-        print("Force = {:}".format(force))
+        # print("Force = {:}".format(force))
         if abs(force) > max_force:
             print("Force was too large, stopping.")
             actuator.go_home_quiet_down()

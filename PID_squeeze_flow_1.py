@@ -306,10 +306,10 @@ def background():
         # print(actuator)
         # print(actuator.variables)
         cur_pos_mm = actuator.get_pos_mm()
-        cur_pos = actuator.variables.current_position
+        cur_pos = actuator.get_pos()
         tar_pos = actuator.variables.target_position
         cur_vel_mms = actuator.get_vel_mms()
-        cur_vel = actuator.variables.current_velocity
+        cur_vel = actuator.get_vel()
         tar_vel = actuator.variables.target_velocity
         max_speed = actuator.variables.max_speed
         max_decel = actuator.variables.max_decel

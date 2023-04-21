@@ -253,7 +253,7 @@ def actuator_thread():
                 * math.pi
                 * gap**5
                 * OpenScale.grams_to_N(force)
-                / (3 * sample_volume * (actuator.get_vel_mms() / 1000))
+                / (3 * sample_volume**2 * (actuator.get_vel_mms() / 1000))
             )  # Pa.s
         else:
             eta_guess = 0

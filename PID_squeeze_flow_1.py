@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
     with open("data/" + csv_name, "a") as datafile:
         datafile.write(
-            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Current Gap (m), Viscosity (Pa.s), Sample Volume (m^3)\n".format(
+            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Start Gap (m), Current Gap (m), Viscosity (Pa.s), Sample Volume (m^3)\n".format(
                 scale.units, scale.units
             )
         )
@@ -300,7 +300,7 @@ def actuator_thread():
 
 def background():
     """Records data to csv"""
-    global actuator
+    global actuator, start_gap
 
     start_time = time()
     while True:
@@ -340,6 +340,7 @@ def background():
                 vin_voltage,
                 force,
                 target,
+                start_gap / 1000.0,
                 gap,
                 eta_guess,
                 sample_volume,

@@ -71,9 +71,9 @@ if __name__ == "__main__":
 
     vol_line = input("Enter the sample volume in [mL]: ")
     temp = re.compile("[0-9.]+")
-    res = temp.search(gap_line).group(0)
+    res = temp.search(vol_line).group(0)
     sample_volume = abs(float(res)) * 1e-6  # m^3
-    print("Sample volume is {:.2f}mL".format(start_gap))
+    print("Sample volume is {:.2f}mL".format(sample_volume))
 
     weight = None
     while weight is None:

@@ -45,6 +45,8 @@ sample_volume = 0
 """Amount of sample in m^3"""
 eta_guess = 0
 """Estimate of newtonian viscosity of sample"""
+test_active = False
+"""Whether or not the test is active. Should be true after force threshold is met but before test ends"""
 
 error = 0
 """Positive error means force must increase, so actuator must extend down"""
@@ -97,7 +99,7 @@ if __name__ == "__main__":
 
     with open("data/" + csv_name, "a") as datafile:
         datafile.write(
-            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Start Gap (m), Current Gap (m), Viscosity (Pa.s), Sample Volume (m^3)\n".format(
+            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Start Gap (m), Current Gap (m), Viscosity (Pa.s), Sample Volume (m^3), Test Active?\n".format(
                 scale.units, scale.units
             )
         )
@@ -190,13 +192,16 @@ def actuator_thread():
         # print("{:6.2f} <? {:6.2f}".format(force, force_threshold))
         actuator.heartbeat()
         if abs(force) > max_force:
+            test_active = False
             break
         if abs(force) > force_threshold:
+            test_active = True
             break
         # print("{:6.2f} >=? {:6.2f}".format(get_pos_mm(), start_gap))
         if abs(actuator.get_pos_mm()) >= start_gap:
             print("Hit the hard-stop without ever exceeding threshold force, stopping.")
             actuator.go_home_quiet_down()
+            test_active = False
             return
 
         # reset integrated error - prevent integral windup
@@ -219,18 +224,21 @@ def actuator_thread():
         if abs(force) > max_force:
             print("Force was too large, stopping.")
             actuator.go_home_quiet_down()
+            test_active = False
             return
 
         # Check if went too far
         if abs(actuator.get_pos_mm()) >= start_gap:
             print("Hit the hard-stop, stopping.")
             actuator.go_home_quiet_down()
+            test_active = False
             return
 
         # Check if returned towards zero too far
         if abs(actuator.get_pos_mm()) <= 1:
             print("Returned too close to home, stopping.")
             actuator.go_home_quiet_down()
+            test_active = False
             return
 
         # Get gap
@@ -344,6 +352,7 @@ def background():
                 gap,
                 eta_guess,
                 sample_volume,
+                test_active,
             ]
             dataline = ",".join(map(str, output_params)) + "\n"
             datafile.write(dataline)

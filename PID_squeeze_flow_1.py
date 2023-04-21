@@ -314,17 +314,20 @@ def background():
     while True:
         # print(actuator)
         # print(actuator.variables)
-        cur_pos_mm = actuator.get_pos_mm()
         cur_pos = actuator.get_pos()
+        cur_pos_mm = actuator.steps_to_mm(cur_pos)
         tar_pos = actuator.variables.target_position
-        cur_vel_mms = actuator.get_vel_mms()
         cur_vel = actuator.get_vel()
+        cur_vel_mms = actuator.vel_to_mms(cur_vel)
         tar_vel = actuator.variables.target_velocity
         max_speed = actuator.variables.max_speed
         max_decel = actuator.variables.max_decel
         max_accel = actuator.variables.max_accel
         step_mode = actuator.variables.step_mode
         vin_voltage = actuator.variables.vin_voltage
+        gap = (
+            actuator.get_pos_mm() + start_gap
+        ) / 1000.0  # set gap whether or not test is active
 
         with open(
             "data/" + csv_name, "a"

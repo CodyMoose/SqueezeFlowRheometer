@@ -75,7 +75,7 @@ if __name__ == "__main__":
     temp = re.compile("[0-9.]+")
     res = temp.search(vol_line).group(0)
     sample_volume = abs(float(res)) * 1e-6  # m^3
-    print("Sample volume is {:.2f}mL".format(sample_volume))
+    print("Sample volume is {:.2f}mL".format(sample_volume * 1e6))
 
     weight = None
     while weight is None:

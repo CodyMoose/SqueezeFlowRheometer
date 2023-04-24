@@ -47,6 +47,8 @@ eta_guess = 0
 """Estimate of newtonian viscosity of sample (Pa.s)"""
 test_active = False
 """Whether or not the test is active. Should be true after force threshold is met but before test ends"""
+spread_beyond_hammer = False
+"""Whether or not the sample has spread beyond the hammer. This will happen if gap gets too thin."""
 
 error = 0
 """Positive error means force must increase, so actuator must extend down"""
@@ -99,7 +101,7 @@ if __name__ == "__main__":
 
     with open("data/" + csv_name, "a") as datafile:
         datafile.write(
-            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Start Gap (m), Current Gap (m), Viscosity (Pa.s), Sample Volume (m^3), Test Active?\n".format(
+            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Start Gap (m), Current Gap (m), Viscosity (Pa.s), Sample Volume (m^3), Test Active?, Spread beyond hammer?\n".format(
                 scale.units, scale.units
             )
         )
@@ -159,7 +161,7 @@ def load_cell_thread():
 
 def actuator_thread():
     """Drives actuator"""
-    global gap, eta_guess, error, int_error, der_error, sample_volume
+    global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -248,7 +250,13 @@ def actuator_thread():
         # Get gap
         gap = (actuator.get_pos_mm() + start_gap) / 1000.0  # m
 
+        # Check if sample spread beyond hammer, but only perform the check if it hasn't already
+        hammer_volume = gap * HAMMER_AREA  # volume under hammer
+        if not spread_beyond_hammer:
+            spread_beyond_hammer = sample_volume > hammer_volume
+
         # Guess Newtonian viscosity
+        visc_volume = min(sample_volume, hammer_volume)
         if (
             sample_volume > 0 and actuator.get_vel_mms() != 0
         ):  # viscosity estimates only valid if sample volume is positive
@@ -257,7 +265,9 @@ def actuator_thread():
                 * math.pi
                 * gap**5
                 * OpenScale.grams_to_N(force)
-                / (3 * sample_volume**2 * (actuator.get_vel_mms() / 1000))
+                / 3
+                / visc_volume**2
+                / (actuator.get_vel_mms() / 1000)
             )  # Pa.s
         else:
             eta_guess = 0
@@ -312,7 +322,7 @@ def actuator_thread():
 
 def background():
     """Records data to csv"""
-    global actuator, start_gap
+    global actuator, start_gap, test_active, spread_beyond_hammer
 
     start_time = time()
     while True:
@@ -367,6 +377,7 @@ def background():
                 eta_guess,
                 sample_volume,
                 test_active,
+                spread_beyond_hammer,
             ]
             dataline = ",".join(map(str, output_params)) + "\n"
             datafile.write(dataline)

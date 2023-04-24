@@ -370,7 +370,7 @@ def background():
                 max_accel,
                 step_mode,
                 vin_voltage,
-                force,
+                force * FORCE_UP_SIGN,
                 target,
                 start_gap / 1000.0,
                 gap,

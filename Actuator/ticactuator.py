@@ -66,7 +66,7 @@ class TicActuator(PyTic):
         pos = None
         while pos is None:
             try:
-                pos = self.variables.current_position
+                pos = self.get_variable_by_name("current_position")
             except:
                 pos = None
             else:
@@ -140,7 +140,7 @@ class TicActuator(PyTic):
         vel = None
         while vel is None:
             try:
-                vel = self.variables.current_velocity
+                vel = self.get_variable_by_name("current_velocity")
             except:
                 vel = None
             else:
@@ -258,3 +258,22 @@ class TicActuator(PyTic):
         print("Deenergizing")
         self.deenergize()
         print(self.variables.error_status)
+
+    def get_variable_by_name(self, name: str):
+        """Gets actuator variables and keeps trying until success
+
+        Args:
+            name (str): name of variable to retrieve
+
+        Returns:
+            _type_: the value of the variable that was requested, type may vary
+        """
+        var = None
+        while var is None:
+            try:
+                var = getattr(self.variables, name)
+            except:
+                var = None
+            else:
+                break
+        return var

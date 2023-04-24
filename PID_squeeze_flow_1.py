@@ -320,15 +320,22 @@ def background():
         # print(actuator.variables)
         cur_pos = actuator.get_pos()
         cur_pos_mm = actuator.steps_to_mm(cur_pos)
-        tar_pos = actuator.variables.target_position
+        # tar_pos = actuator.variables.target_position
+        tar_pos = actuator.get_variable_by_name("target_position")
         cur_vel = actuator.get_vel()
         cur_vel_mms = actuator.vel_to_mms(cur_vel)
-        tar_vel = actuator.variables.target_velocity
-        max_speed = actuator.variables.max_speed
-        max_decel = actuator.variables.max_decel
-        max_accel = actuator.variables.max_accel
-        step_mode = actuator.variables.step_mode
-        vin_voltage = actuator.variables.vin_voltage
+        # tar_vel = actuator.variables.target_velocity
+        tar_vel = actuator.get_variable_by_name("target_velocity")
+        # max_speed = actuator.variables.max_speed
+        max_speed = actuator.get_variable_by_name("max_speed")
+        # max_decel = actuator.variables.max_decel
+        max_decel = actuator.get_variable_by_name("max_decel")
+        # max_accel = actuator.variables.max_accel
+        max_accel = actuator.get_variable_by_name("max_accel")
+        # step_mode = actuator.variables.step_mode
+        step_mode = actuator.get_variable_by_name("step_mode")
+        # vin_voltage = actuator.variables.vin_voltage
+        vin_voltage = actuator.get_variable_by_name("vin_voltage")
         gap = (
             actuator.get_pos_mm() + start_gap
         ) / 1000.0  # set gap whether or not test is active

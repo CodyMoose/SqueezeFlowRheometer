@@ -8,6 +8,9 @@ class OpenScale:
     def __init__(self):
         self.ser = serial.Serial("COM5", 115200)
         self.config_path = "LoadCell\config.json"
+        self.outlier_threshold = (
+            100  # g, if a measurement is beyond this limit, throw it out
+        )
 
         try:
             with open(self.config_path, "r") as read_file:
@@ -94,8 +97,11 @@ class OpenScale:
         """
         return self.reading_to_units(self.get_reading())
 
-    def wait_for_calibrated_measurement(self) -> float:
+    def wait_for_calibrated_measurement(self, non_outlier: bool = False) -> float:
         """Waits for the next valid reading and returns the calibrated measurement
+
+        Args:
+            non_outlier (bool, optional): Whether to wait for a force within a reasonable margin. Defaults to False.
 
         Returns:
             float: force measurement in units chosen during calibration
@@ -103,6 +109,8 @@ class OpenScale:
         meas = None
         while meas is None:
             meas = self.reading_to_units(self.wait_for_reading())
+            if abs(meas) > self.outlier_threshold:
+                meas = None
         return meas
 
     def grams_to_N(f: float) -> float:

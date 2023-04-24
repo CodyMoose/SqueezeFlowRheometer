@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     weight = None
     while weight is None:
-        weight = scale.wait_for_calibrated_measurement()
+        weight = scale.wait_for_calibrated_measurement(True)
     if abs(weight) > 0.5:
         ans = input(
             "The load cell is out of tare! Current reading is {:.2f}{:}. Do you want to tare it now? (y/n) ".format(
@@ -123,16 +123,8 @@ def load_cell_thread():
     cur_time = time()
     prev_time = cur_time
 
-    outlier_threshold = 100  # g, if something is beyond this limit, throw it out
     while True:
-        # Because they're on separate threads, the actuator thread is able to read outlier forces before I can throw them out!
-        prelim_force = scale.wait_for_calibrated_measurement() * FORCE_UP_SIGN
-        if abs(prelim_force) > outlier_threshold:
-            continue
-        force = (
-            prelim_force  # once I've thrown away outliers, I can safely set the force.
-        )
-        # print("Load  = {:}".format(force))
+        force = scale.wait_for_calibrated_measurement(True) * FORCE_UP_SIGN
 
         prev_time = cur_time
         cur_time = time()

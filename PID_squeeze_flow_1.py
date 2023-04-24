@@ -181,10 +181,14 @@ def actuator_thread():
     # upper_limit = -100
     # lower_limit = -start_gap * 100
 
-    K_P = 0.04
+    # K_P = 0.04
+    # """Proportional control coefficient for error in grams to speed in mm/s"""
+    # K_I = 0.015
+    # K_D = 0.0005
+    K_P = 0.04 / 30.0
     """Proportional control coefficient for error in grams to speed in mm/s"""
-    K_I = 0.015
-    K_D = 0.0005
+    K_I = 0.015 / 30.0
+    K_D = 0.0005 / 30.0
 
     # Start by approaching and waiting until force is non-negligible
     actuator.set_vel_mms(approach_velocity)
@@ -262,11 +266,11 @@ def actuator_thread():
         if abs(int_error) > 1000:
             int_error = 1000 * math.copysign(1000, int_error)
 
-        vel_P = -K_P * error
+        vel_P = -K_P * target * error
         """Proportional component of velocity response"""
-        vel_I = -K_I * int_error
+        vel_I = -K_I * target * int_error
         """Integral component of velocity response"""
-        vel_D = -K_D * der_error
+        vel_D = -K_D * target * der_error
         """Derivative component of velocity response"""
         v_new = vel_P + vel_D + vel_I
         v_new = min(v_new, 0)  # Only go downward

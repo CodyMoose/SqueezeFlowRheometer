@@ -36,15 +36,15 @@ target = 0
 FORCE_UP_SIGN = -1
 """Sign of a positive force. This should be 1 or -1, and is used to compute velocity based on force"""
 dt_force = 0
-"""Time between last two force measurements"""
+"""Time between last two force measurements (s)"""
 start_gap = 0
-"""Initial distance away from hard stop."""
+"""Initial distance (mm) away from hard stop."""
 gap = 0
-"""Current gap between hammer and hard stop"""
+"""Current gap (m) between hammer and hard stop"""
 sample_volume = 0
-"""Amount of sample in m^3"""
+"""Amount of sample (m^3)"""
 eta_guess = 0
-"""Estimate of newtonian viscosity of sample"""
+"""Estimate of newtonian viscosity of sample (Pa.s)"""
 test_active = False
 """Whether or not the test is active. Should be true after force threshold is met but before test ends"""
 

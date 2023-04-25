@@ -49,6 +49,8 @@ test_active = False
 """Whether or not the test is active. Should be true after force threshold is met but before test ends"""
 spread_beyond_hammer = False
 """Whether or not the sample has spread beyond the hammer. This will happen if gap gets too thin."""
+sample_str = ""
+"""What the sample is made of. Used in filename."""
 
 error = 0
 """Positive error means force must increase, so actuator must extend down"""
@@ -78,6 +80,8 @@ if __name__ == "__main__":
     res = temp.search(vol_line).group(0)
     sample_volume = abs(float(res)) * 1e-6  # m^3
     print("Sample volume is {:.2f}mL".format(sample_volume * 1e6))
+
+    sample_str = input("What's the sample made of? This will be used for file naming. ")
 
     weight = None
     while weight is None:

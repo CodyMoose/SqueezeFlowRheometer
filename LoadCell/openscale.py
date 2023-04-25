@@ -2,6 +2,9 @@ import serial
 from time import time
 import json
 import re
+import numpy as np
+import matplotlib.pyplot as plt
+import math
 
 
 class OpenScale:
@@ -149,15 +152,61 @@ class OpenScale:
             print("{:5.1f}: {:}".format(remaining, line))
         self.flush_old_lines()  # and clear any extra lines that may have been generated, we don't need them
 
+        readings = [0] * N
         print("Now recording values for taring")
         for i in range(N):
             # reading = self.get_reading()
             reading = self.wait_for_reading()
+            readings[i] = reading
             print("{:5d}: {:8d}".format(i, reading))
-            total += reading
 
-        tare_value = total / N
+        # Throw out top 1% and bottom 1%
+        remove_rate = 0.01
+        readings_sorted = sorted(readings)
+        readings = readings_sorted[
+            math.floor(remove_rate * N) : math.floor((1 - remove_rate) * N)
+        ]
+        print(
+            "Keeping the middle {:.0%} of samples to remove outliers due to noise".format(
+                1 - 2 * remove_rate
+            )
+        )
+
+        # tare_value = total / N
+        tare_value = sum(readings) / len(readings)
         print("The tare value is {:.2f}".format(tare_value))
+
+        reading_std = np.std(readings)
+        max_reading = max(readings)
+        min_reading = min(readings)
+        print(
+            "min: {:}, max: {:}, standard dev: {:}".format(
+                min_reading, max_reading, reading_std
+            )
+        )
+        readings_over = sorted(i for i in readings if i >= tare_value + reading_std)
+        readings_under = sorted(
+            (i for i in readings if i <= tare_value - reading_std), reverse=True
+        )
+        print(
+            "Number over 1std: {:}, Number under 1std: {:}, total outside 1std: {:}".format(
+                len(readings_over),
+                len(readings_under),
+                len(readings_over) + len(readings_under),
+            )
+        )
+        print(
+            "Number within 1std: {:}".format(
+                len(readings) - len(readings_over) - len(readings_under)
+            )
+        )
+        # print(readings_over)
+        # print(readings_under)
+        plt.hist(sorted(np.array(readings) - tare_value), 20)
+        plt.xlabel("Deviation from the mean")
+        plt.ylabel("Number of samples")
+        plt.title("Middle {:.0%} of readings".format(1 - 2 * remove_rate))
+        plt.show()
 
         self.config["tare"] = tare_value
         with open(self.config_path, "w") as write_file:
@@ -213,13 +262,62 @@ class OpenScale:
             self.get_line()
         self.flush_old_lines()  # and clear any extra lines that may have been generated, we don't need them
 
+        readings = [0] * N
         for i in range(N):
             # reading = self.get_reading()
             reading = self.wait_for_reading()
+            readings[i] = reading - self.tare_value
             print("{:5d}: {:8d}".format(i, reading))
             total += reading - self.tare_value
 
-        average = total / N
+        # Throw out top 1% and bottom 1%
+        remove_rate = 0.01
+        readings_sorted = sorted(readings)
+        readings = readings_sorted[
+            math.floor(remove_rate * N) : math.floor((1 - remove_rate) * N)
+        ]
+        print(
+            "Keeping the middle {:.0%} of samples to remove outliers due to noise".format(
+                1 - 2 * remove_rate
+            )
+        )
+
+        # average = total / N
+        average = sum(readings) / len(readings)
+        print("The calibration average is {:.2f}".format(average))
+
+        reading_std = np.std(readings)
+        max_reading = max(readings)
+        min_reading = min(readings)
+        print(
+            "min: {:}, max: {:}, standard dev: {:}".format(
+                min_reading, max_reading, reading_std
+            )
+        )
+        readings_over = sorted(i for i in readings if i >= average + reading_std)
+        readings_under = sorted(
+            (i for i in readings if i <= average - reading_std), reverse=True
+        )
+        print(
+            "Number over 1std: {:}, Number under 1std: {:}, total outside 1std: {:}".format(
+                len(readings_over),
+                len(readings_under),
+                len(readings_over) + len(readings_under),
+            )
+        )
+        print(
+            "Number within 1std: {:}".format(
+                len(readings) - len(readings_over) - len(readings_under)
+            )
+        )
+        # print(readings_over)
+        # print(readings_under)
+        plt.hist(sorted(np.array(readings) - average), 20)
+        plt.xlabel("Deviation from the mean")
+        plt.ylabel("Number of samples")
+        plt.title("Middle {:.0%} of readings".format(1 - 2 * remove_rate))
+        plt.show()
+
         calibration = -average / cal_weight
         self.config["calibration"] = calibration
         with open(self.config_path, "w") as write_file:

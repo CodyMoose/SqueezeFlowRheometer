@@ -103,6 +103,14 @@ if __name__ == "__main__":
     actuator.halt_and_set_position(0)
     actuator.heartbeat()
 
+    csv_name = (
+        date_str
+        + "_"
+        + "PID_squeeze_flow_1_{:}_{:d}mL_{:d}{:}".format(
+            sample_str, round(sample_volume * 1e6), round(target), scale.units
+        )
+        + "-data.csv"
+    )
     with open("data/" + csv_name, "a") as datafile:
         datafile.write(
             "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Start Gap (m), Current Gap (m), Viscosity (Pa.s), Sample Volume (m^3), Test Active?, Spread beyond hammer?\n".format(

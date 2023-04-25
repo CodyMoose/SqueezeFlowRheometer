@@ -239,6 +239,6 @@ class OpenScale:
             weight = -self.wait_for_calibrated_measurement()
             if weight is None:  # if startup garbage not gone yet
                 continue
-            print("{:.2f}{:}".format(weight, units))
+            print("{:6.2f}{:}".format(weight, units))
 
         return calibration

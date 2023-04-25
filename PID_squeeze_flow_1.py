@@ -69,10 +69,15 @@ if __name__ == "__main__":
     target = float(res)
     print("Target force is {:.2f}{:}".format(target, scale.units))
 
-    gap_line = input("Enter the current gap in [mm]: ")
-    temp = re.compile("[0-9.]+")
-    res = temp.search(gap_line).group(0)
-    start_gap = abs(float(res))
+    gap_line = input(
+        "Enter the current gap in [mm]. If you want to use the gap in the config file, type 'config': "
+    )
+    if "config" in gap_line.lower():
+        start = float(scale.config.gap)
+    else:
+        temp = re.compile("[0-9.]+")
+        res = temp.search(gap_line).group(0)
+        start_gap = abs(float(res))
     print("Starting gap is {:.2f}mm".format(start_gap))
 
     vol_line = input("Enter the sample volume in [mL]: ")

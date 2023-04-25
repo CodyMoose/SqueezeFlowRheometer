@@ -97,11 +97,11 @@ class OpenScale:
         """
         return self.reading_to_units(self.get_reading())
 
-    def wait_for_calibrated_measurement(self, non_outlier: bool = False) -> float:
+    def wait_for_calibrated_measurement(self, non_outlier: bool = True) -> float:
         """Waits for the next valid reading and returns the calibrated measurement
 
         Args:
-            non_outlier (bool, optional): Whether to wait for a force within a reasonable margin. Defaults to False.
+            non_outlier (bool, optional): Whether to wait for a force within a reasonable margin. Defaults to True.
 
         Returns:
             float: force measurement in units chosen during calibration

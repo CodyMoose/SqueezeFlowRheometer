@@ -73,7 +73,7 @@ if __name__ == "__main__":
         "Enter the current gap in [mm]. If you want to use the gap in the config file, type 'config': "
     )
     if "config" in gap_line.lower():
-        start = float(scale.config.gap)
+        start_gap = float(scale.config["gap"])
     else:
         temp = re.compile("[0-9.]+")
         res = temp.search(gap_line).group(0)

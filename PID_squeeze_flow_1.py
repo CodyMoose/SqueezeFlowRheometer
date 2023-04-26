@@ -33,7 +33,7 @@ force = 0
 """Current force reading. Negative is a force pushing up on the load cell"""
 target = 0
 """Target force. Negative is a force pushing up on the load cell"""
-FORCE_UP_SIGN = -1
+FORCE_UP_SIGN = 1
 """Sign of a positive force. This should be 1 or -1, and is used to compute velocity based on force"""
 dt_force = 0
 """Time between last two force measurements (s)"""
@@ -392,7 +392,7 @@ def background():
                 max_accel,
                 step_mode,
                 vin_voltage,
-                force * FORCE_UP_SIGN,
+                force,
                 target,
                 start_gap / 1000.0,
                 gap,

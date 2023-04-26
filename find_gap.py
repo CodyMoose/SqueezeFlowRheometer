@@ -56,7 +56,7 @@ if __name__ == "__main__":
     start_gap = float(res)
     print("Starting gap is {:.2f}mm".format(start_gap))
 
-    actuator = TicActuator(step_mode=4)
+    actuator = TicActuator(step_mode=5)
     actuator.set_max_accel_mmss(20, True)
     actuator.set_max_speed_mms(5)
 
@@ -86,12 +86,7 @@ def load_cell_thread():
     prev_time = cur_time
     outlier_threshold = 100
     while True:
-        prelim_force = scale.wait_for_calibrated_measurement() * FORCE_UP_SIGN
-        if abs(prelim_force) > outlier_threshold:
-            continue
-        force = (
-            prelim_force  # once I've thrown away outliers, I can safely set the force.
-        )
+        force = scale.wait_for_calibrated_measurement(True) * FORCE_UP_SIGN
 
         if (time() - start_time) >= 2000 or (
             (not ac.is_alive()) and (not b.is_alive()) and (time() - start_time) > 1
@@ -171,7 +166,7 @@ def actuator_thread():
                 actuator.move_to_mm(hit_pos + backoff_dist)
                 break
 
-            out_str = "{:7.3f}{:}, pos = {:8.3f}".format(
+            out_str = "{:7.3f}{:}, pos = {:8.3f}mm".format(
                 force, scale.units, actuator.get_pos_mm()
             )
 

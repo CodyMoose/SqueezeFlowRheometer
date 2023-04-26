@@ -280,7 +280,7 @@ def actuator_thread():
         # Guess Newtonian viscosity
         visc_volume = min(sample_volume, hammer_volume)
         if (
-            sample_volume > 0 and actuator.get_vel_mms() != 0
+            visc_volume > 0 and abs(actuator.get_vel_mms()) > 0
         ):  # viscosity estimates only valid if sample volume is positive
             eta_guess = abs(
                 2

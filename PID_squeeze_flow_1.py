@@ -282,19 +282,20 @@ def actuator_thread():
 
         # Guess Newtonian viscosity
         visc_volume = min(sample_volume, hammer_volume)
-        if (
-            visc_volume > 0 and abs(actuator.get_vel_mms()) > 0
-        ):  # viscosity estimates only valid if sample volume is positive
-            eta_guess = abs(
-                2
-                * math.pi
-                * gap**5
-                * OpenScale.grams_to_N(force)
-                / 3
-                / visc_volume**2
-                / (actuator.get_vel_mms() / 1000)
-            )  # Pa.s
-        else:
+        try:
+            if (
+                visc_volume > 0 and abs(actuator.get_vel_mms()) > 0
+            ):  # viscosity estimates only valid if sample volume is positive
+                eta_guess = abs(
+                    2
+                    * math.pi
+                    * gap**5
+                    * OpenScale.grams_to_N(force)
+                    / 3
+                    / visc_volume**2
+                    / (actuator.get_vel_mms() / 1000)
+                )  # Pa.s
+        except:
             eta_guess = 0
 
         # prevent integral windup

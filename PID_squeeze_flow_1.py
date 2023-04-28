@@ -43,6 +43,8 @@ gap = 0
 """Current gap (m) between hammer and hard stop"""
 sample_volume = 0
 """Amount of sample (m^3)"""
+visc_volume = 0
+"""Volume used for viscosity computations. Will be less than total sample if spread beyond hammer."""
 eta_guess = 0
 """Estimate of newtonian viscosity of sample (Pa.s)"""
 test_active = False
@@ -118,7 +120,7 @@ if __name__ == "__main__":
     )
     with open("data/" + csv_name, "a") as datafile:
         datafile.write(
-            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Start Gap (m), Current Gap (m), Viscosity (Pa.s), Sample Volume (m^3), Test Active?, Spread beyond hammer?\n".format(
+            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Start Gap (m), Current Gap (m), Viscosity (Pa.s), Sample Volume (m^3), Viscosity Volume (m^3), Test Active?, Spread beyond hammer?\n".format(
                 scale.units, scale.units
             )
         )
@@ -183,7 +185,7 @@ def load_cell_thread():
 
 def actuator_thread():
     """Drives actuator"""
-    global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer
+    global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -345,7 +347,7 @@ def actuator_thread():
 
 def background():
     """Records data to csv"""
-    global actuator, start_gap, test_active, spread_beyond_hammer
+    global actuator, start_gap, test_active, spread_beyond_hammer, visc_volume
 
     start_time = time()
     while True:
@@ -399,6 +401,7 @@ def background():
                 gap,
                 eta_guess,
                 sample_volume,
+                visc_volume,
                 test_active,
                 spread_beyond_hammer,
             ]

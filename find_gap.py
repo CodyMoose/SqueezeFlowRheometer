@@ -113,7 +113,7 @@ def actuator_thread():
     approach_velocity = -0.5  # mm/s, speed to approach bath of fluid at
     force_threshold = 0.8  # g, the force to look for when you hit something
     max_force = 80  # g, if force greater than this, stop test.
-    backoff_dist = 1  # mm, distance to back away when you hit
+    backoff_dist = 0.1  # mm, distance to back away when you hit
 
     hit_pos = 0
 
@@ -140,7 +140,7 @@ def actuator_thread():
 
     N_find = 5
     gap_list = [0] * N_find
-    slowdown_factor = 0.1  # what factor to slow down by on fine approach
+    slowdown_factor = 0.05  # what factor to slow down by on fine approach
 
     for i in range(N_find):
         actuator.set_vel_mms(approach_velocity * slowdown_factor)

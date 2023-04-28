@@ -221,6 +221,7 @@ def actuator_thread():
         actuator.heartbeat()
         if abs(force) > max_force:
             test_active = False
+            actuator.go_home_quiet_down()
             break
         if abs(force) > force_threshold:
             test_active = True
@@ -228,8 +229,8 @@ def actuator_thread():
         # print("{:6.2f} >=? {:6.2f}".format(get_pos_mm(), start_gap))
         if abs(actuator.get_pos_mm()) >= start_gap:
             print("Hit the hard-stop without ever exceeding threshold force, stopping.")
-            actuator.go_home_quiet_down()
             test_active = False
+            actuator.go_home_quiet_down()
             return
 
         # reset integrated error - prevent integral windup
@@ -251,22 +252,22 @@ def actuator_thread():
         # print("Force = {:}".format(force))
         if abs(force) > max_force:
             print("Force was too large, stopping.")
-            actuator.go_home_quiet_down()
             test_active = False
+            actuator.go_home_quiet_down()
             return
 
         # Check if went too far
         if abs(actuator.get_pos_mm()) >= start_gap:
             print("Hit the hard-stop, stopping.")
-            actuator.go_home_quiet_down()
             test_active = False
+            actuator.go_home_quiet_down()
             return
 
         # Check if returned towards zero too far
         if abs(actuator.get_pos_mm()) <= 1:
             print("Returned too close to home, stopping.")
-            actuator.go_home_quiet_down()
             test_active = False
+            actuator.go_home_quiet_down()
             return
 
         # Get gap

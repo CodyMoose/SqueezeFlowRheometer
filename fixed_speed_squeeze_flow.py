@@ -186,7 +186,7 @@ def actuator_thread():
 
     # Start by approaching to the start gap
     gap = (actuator.get_pos_mm() + loading_gap) / 1000.0  # m
-    actuator.set_vel_mms(-abs(target))
+    actuator.set_vel_mms(approach_velocity)
     while abs(gap) > abs(start_gap) / 1000.0:
         # print("{:6.2f} <? {:6.2f}".format(force, force_threshold))
         actuator.heartbeat()
@@ -203,6 +203,7 @@ def actuator_thread():
 
     test_active = True
     print("Reached start gap, test now active.")
+    actuator.set_vel_mms(-abs(target))
 
     gap = (actuator.get_pos_mm() + loading_gap) / 1000.0  # m
 

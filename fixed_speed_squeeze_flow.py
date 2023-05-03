@@ -185,7 +185,7 @@ def actuator_thread():
     # lower_limit = -start_gap * 100
 
     # Start by approaching to the start gap
-    gap = (actuator.get_pos_mm() + loading_gap) / 1000.0  # m
+    gap = compute_gap()
     actuator.set_vel_mms(approach_velocity)
     while abs(gap) > abs(start_gap) / 1000.0:
         # print("{:6.2f} <? {:6.2f}".format(force, force_threshold))
@@ -205,7 +205,7 @@ def actuator_thread():
     print("Reached start gap, test now active.")
     actuator.set_vel_mms(-abs(target))
 
-    gap = (actuator.get_pos_mm() + loading_gap) / 1000.0  # m
+    gap = compute_gap()
 
     prev_time = time()
     cur_time = time()
@@ -239,7 +239,7 @@ def actuator_thread():
             return
 
         # Get gap
-        gap = (actuator.get_pos_mm() + loading_gap) / 1000.0  # m
+        gap = compute_gap()
 
         # Check if sample spread beyond hammer, but only perform the check if it hasn't already
         hammer_volume = gap * HAMMER_AREA  # volume under hammer
@@ -300,9 +300,7 @@ def background():
         step_mode = actuator.get_variable_by_name("step_mode")
         # vin_voltage = actuator.variables.vin_voltage
         vin_voltage = actuator.get_variable_by_name("vin_voltage")
-        gap = (
-            actuator.get_pos_mm() + loading_gap
-        ) / 1000.0  # set gap whether or not test is active
+        gap = compute_gap()
 
         with open(
             "data/" + csv_name, "a"

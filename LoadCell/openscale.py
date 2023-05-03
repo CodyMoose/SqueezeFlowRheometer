@@ -265,9 +265,9 @@ class OpenScale:
         readings = [0] * N
         for i in range(N):
             # reading = self.get_reading()
-            reading = self.wait_for_reading()
-            readings[i] = reading - self.tare_value
-            print("{:5d}: {:8d}".format(i, reading))
+            reading = self.wait_for_reading() - self.tare_value
+            readings[i] = reading
+            print("{:5d}: {:10.1f}".format(i, reading))
             total += reading - self.tare_value
 
         # Throw out top 1% and bottom 1%

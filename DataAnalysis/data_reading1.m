@@ -9,7 +9,7 @@ sqTable2 = readtable("C:\Users\rcmoo\Documents\GitHub\SqueezeFlowRheometer\data\
 sqTable3 = readtable("C:\Users\rcmoo\Documents\GitHub\SqueezeFlowRheometer\data\2023-04-28_15-29-58_PID_squeeze_flow_1_PEG_4mL_10g-data.csv");
 sqTable4 = readtable("C:\Users\rcmoo\Documents\GitHub\SqueezeFlowRheometer\data\2023-04-28_15-50-23_PID_squeeze_flow_1_PEG_4mL_10g-data.csv");
 
-% sqTable.Properties.VariableNames'
+% sqTable1.Properties.VariableNames'
 %%
 clf
 
@@ -53,7 +53,7 @@ t4 = t4 - t4(1);
 % plot(t,F)
 
 
-N = 301;
+N = 150;
 hammer_area = pi * 0.025^2;
 
 vel_mean1 = movmean(vel1,N);
@@ -80,6 +80,9 @@ F_mean4 = movmean(F4,N);
 visc_volume4 = min(hammer_area * gap_mean4, sqTable4.SampleVolume_m_3_(test_active4));
 eta_guess4 = abs((2 * pi * gap_mean4.^5 .* F_mean4) ./ (3 * visc_volume4.^2 .* vel_mean4));
 
+%%
+clf
+
 % figure(1)
 % plot(t,vel)
 % hold on
@@ -103,6 +106,113 @@ hold on
 plot(gap_mean2,eta_guess2,'.')
 plot(gap_mean3,eta_guess3,'.')
 plot(gap_mean4,eta_guess4,'.')
+legend("Test 1","Test 2","Test 3","Test 4")
 hold off
 xlabel('gap')
 ylabel('viscosity')
+
+figure(4)
+% plot(t1,F_mean1)
+% hold on
+% plot(t2,F_mean2)
+% plot(t3,F_mean3)
+% plot(t4,F_mean4)
+% legend("Test 1","Test 2","Test 3","Test 4")
+% hold off
+% xlabel('time')
+% ylabel('force')
+
+figure(5)
+plot(t1,gap_mean1.^-2)
+hold on
+plot(t2,gap_mean2.^-2)
+plot(t3,gap_mean3.^-2)
+plot(t4,gap_mean4.^-2)
+legend("Test 1","Test 2","Test 3","Test 4")
+hold off
+xlabel('time')
+ylabel('gap')
+
+figure(6)
+plot(gap_mean1,F_mean1)
+hold on
+plot(gap_mean2,F_mean2)
+plot(gap_mean3,F_mean3)
+plot(gap_mean4,F_mean4)
+legend("Test 1","Test 2","Test 3","Test 4")
+hold off
+xlabel('gap')
+ylabel('force')
+
+figure(7)
+tiledlayout(2,2)
+
+nexttile
+% plot(t1,F_mean1)
+% hold on
+% plot(t2,F_mean2)
+% plot(t3,F_mean3)
+% plot(t4,F_mean4)
+hold off
+% legend("Test 1","Test 2","Test 3","Test 4")
+xlabel('time (s)')
+ylabel('force (N)')
+
+semilogy(t1,abs(F_mean1 - 10*F_factor)/F_factor)
+hold on
+plot(t2,abs(F_mean2 - 10*F_factor)/F_factor)
+plot(t3,abs(F_mean3 - 10*F_factor)/F_factor)
+plot(t4,abs(F_mean4 - 10*F_factor)/F_factor)
+legend("Test 1","Test 2","Test 3","Test 4")
+hold off
+xlabel('time (s)')
+ylabel('absolute force error (g)')
+
+nexttile
+plot(t1,eta_guess1)
+hold on
+plot(t2,eta_guess2)
+plot(t3,eta_guess3)
+plot(t4,eta_guess4)
+hold off
+xlabel('time')
+ylabel('viscosity')
+
+nexttile
+plot(t1,gap_mean1)
+hold on
+plot(t2,gap_mean2)
+plot(t3,gap_mean3)
+plot(t4,gap_mean4)
+hold off
+xlabel('time')
+ylabel('gap')
+
+nexttile
+% semilogy(t1,abs(vel_mean1))
+% hold on
+% plot(t2,abs(vel_mean2))
+% plot(t3,abs(vel_mean3))
+% plot(t4,abs(vel_mean4))
+% hold off
+% xlabel('time')
+% ylabel('velocity')
+
+plot(t1,abs(vel_mean1.^(2/3)))
+hold on
+plot(t2,abs(vel_mean2.^(2/3)))
+plot(t3,abs(vel_mean3.^(2/3)))
+plot(t4,abs(vel_mean4.^(2/3)))
+hold off
+
+xlabel('time')
+ylabel('velocity')
+
+% semilogy(t1,abs(vel_mean1./gap_mean1.^3))
+% hold on
+% semilogy(t2,abs(vel_mean2./gap_mean2.^3))
+% semilogy(t3,abs(vel_mean3./gap_mean3.^3))
+% semilogy(t4,abs(vel_mean4./gap_mean4.^3))
+% hold off
+% xlabel('time')
+% ylabel('gap')

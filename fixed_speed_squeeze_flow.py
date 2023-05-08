@@ -190,6 +190,7 @@ def actuator_thread():
     while abs(gap) > abs(start_gap) / 1000.0:
         # print("{:6.2f} <? {:6.2f}".format(force, force_threshold))
         actuator.heartbeat()
+        gap = compute_gap()
         if abs(force) > max_force:
             test_active = False
             actuator.go_home_quiet_down()

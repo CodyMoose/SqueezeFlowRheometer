@@ -45,8 +45,8 @@ class OpenScale:
         Returns:
                 int: the load cell reading in that line
         """
-        numString = serial_line.decode("utf-8")[:-3]  # just get the actual content
         try:
+            numString = serial_line.decode("utf-8")[:-3]  # just get the actual content
             reading = int(numString)
             return reading
         except:

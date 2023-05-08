@@ -265,7 +265,11 @@ def actuator_thread():
             eta_guess = 0
 
         out_str = "{:6.2f}{:}, v = {:11.5f}, pos = {:6.2f}, gap = {:6.2f}".format(
-            force, scale.units, actuator.get_vel_mms(), actuator.get_pos_mm(), gap
+            force,
+            scale.units,
+            actuator.get_vel_mms(),
+            actuator.get_pos_mm(),
+            gap * 1000.0,
         )
 
         print(out_str)

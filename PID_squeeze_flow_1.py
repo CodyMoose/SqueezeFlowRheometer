@@ -61,6 +61,11 @@ int_error = 0
 der_error = 0
 """Time-derivative of error"""
 
+K_P = 0.04 / 30.0
+"""Proportional control coefficient for error in grams to speed in mm/s"""
+K_I = 0.015 / 30.0
+K_D = 0.0005 / 30.0
+
 if __name__ == "__main__":
     scale = OpenScale()
 
@@ -120,7 +125,7 @@ if __name__ == "__main__":
     )
     with open("data/" + csv_name, "a") as datafile:
         datafile.write(
-            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Start Gap (m), Current Gap (m), Viscosity (Pa.s), Sample Volume (m^3), Viscosity Volume (m^3), Test Active?, Spread beyond hammer?\n".format(
+            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Start Gap (m), Current Gap (m), Viscosity (Pa.s), Sample Volume (m^3), Viscosity Volume (m^3), Test Active?, Spread beyond hammer?, Error, K_P, Integrated Error, K_I, Error Derivative, K_D\n".format(
                 scale.units, scale.units
             )
         )
@@ -211,10 +216,6 @@ def actuator_thread():
     # """Proportional control coefficient for error in grams to speed in mm/s"""
     # K_I = 0.015
     # K_D = 0.0005
-    K_P = 0.04 / 30.0
-    """Proportional control coefficient for error in grams to speed in mm/s"""
-    K_I = 0.015 / 30.0
-    K_D = 0.0005 / 30.0
 
     # Start by approaching and waiting until force is non-negligible
     actuator.set_vel_mms(approach_velocity)
@@ -348,7 +349,7 @@ def actuator_thread():
 
 def background():
     """Records data to csv"""
-    global actuator, start_gap, test_active, spread_beyond_hammer, visc_volume
+    global actuator, start_gap, test_active, spread_beyond_hammer, visc_volume, error, int_error, der_error
 
     start_time = time()
     while True:
@@ -405,6 +406,12 @@ def background():
                 visc_volume,
                 test_active,
                 spread_beyond_hammer,
+                error,
+                K_P,
+                int_error,
+                K_I,
+                der_error,
+                K_D,
             ]
             dataline = ",".join(map(str, output_params)) + "\n"
             datafile.write(dataline)

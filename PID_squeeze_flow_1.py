@@ -5,6 +5,9 @@ from datetime import datetime
 import re
 from LoadCell.openscale import OpenScale
 from Actuator.ticactuator import TicActuator
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import numpy as np
 
 # - Initialization -------------------------------------------
 
@@ -65,6 +68,10 @@ K_P = 0.04 / 30.0
 """Proportional control coefficient for error in grams to speed in mm/s"""
 K_I = 0.015 / 30.0
 K_D = 0.0005 / 30.0
+
+times = []
+forces = []
+gaps = []
 
 if __name__ == "__main__":
     scale = OpenScale()
@@ -418,6 +425,10 @@ def background():
             datafile.write(dataline)
             # print(dataline)
 
+        times.append(cur_duration)
+        forces.append(force)
+        gaps.append(gap)
+
         sleep(0.02)
 
         if (time() - start_time) >= 2000 or (
@@ -438,3 +449,59 @@ b = threading.Thread(name="background", target=background)
 lc.start()
 ac.start()
 b.start()
+
+max_time_window = 30
+fig = plt.figure()
+ax1 = fig.add_subplot(1, 1, 1)
+ax2 = ax1.twinx()
+
+color1 = "C0"
+color2 = "C1"
+
+
+def animate(i):
+    global ax1, ax2, times, forces, gaps
+    ax1.clear()
+    ax2.clear()
+
+    # Throw away data & timestamps that are too old.
+    # while times[-1] - times[0] > max_time_window:
+    #     times.pop(0)
+    #     forces.pop(0)
+    #     gaps.pop(0)
+
+    # Store data & timestamps locally to prevent race conditions due to multithreading, and only get a portion of the points to plot faster.
+    N_plot = min(1000, len(times))
+    idxs = np.linspace(0, len(times) - 1, N_plot, dtype=int)
+    timesTemp = [times[i] for i in idxs]
+    forcesTemp = [forces[i] for i in idxs]
+    gapsTemp = [gaps[i] for i in idxs]
+
+    # timesTemp = times[:]
+    # forcesTemp = forces[:]
+    # gapsTemp = gaps[:]
+
+    ax1.set_xlabel("Time [s]")
+    ax1.set_ylabel("Force [g]", color=color1)
+    ax2.set_ylabel("Gap [mm]", color=color2)
+
+    ax1.plot(timesTemp, forcesTemp, color1, label="Force")
+    ax2.plot(timesTemp, [1000 * g for g in gapsTemp], color2, label="Gap")
+    plt.xlim(min(timesTemp), max(max(timesTemp), max_time_window))
+    plt.title("Sample: {:}".format(sample_str))
+
+    ax1.set_ylim((0, max(2 * target, max(forcesTemp))))
+    ax2.set_ylim((0, 1000 * max(gapsTemp)))
+
+    # Color y-ticks
+    ax1.tick_params(axis="y", colors=color1)
+    ax2.tick_params(axis="y", colors=color2)
+
+    # Color y-axes
+    ax1.spines["left"].set_color(color1)
+    ax2.spines["left"].set_alpha(0)  # hide second left y axis to show first one
+    ax2.spines["right"].set_color(color2)
+
+
+ani = animation.FuncAnimation(fig, animate, interval=10)
+plt.show()

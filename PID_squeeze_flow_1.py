@@ -50,6 +50,8 @@ visc_volume = 0
 """Volume used for viscosity computations. Will be less than total sample if spread beyond hammer."""
 eta_guess = 0
 """Estimate of newtonian viscosity of sample (Pa.s)"""
+yield_stress_guess = 0
+"""Estimate of yield stress of sample (Pa)"""
 test_active = False
 """Whether or not the test is active. Should be true after force threshold is met but before test ends"""
 spread_beyond_hammer = False
@@ -132,7 +134,7 @@ if __name__ == "__main__":
     )
     with open("data/" + csv_name, "a") as datafile:
         datafile.write(
-            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Start Gap (m), Current Gap (m), Viscosity (Pa.s), Sample Volume (m^3), Viscosity Volume (m^3), Test Active?, Spread beyond hammer?, Error, K_P, Integrated Error, K_I, Error Derivative, K_D\n".format(
+            "Current Time, Elapsed Time, Current Position (mm), Current Position, Target Position, Current Velocity (mm/s), Current Velocity, Target Velocity, Max Speed, Max Decel, Max Accel, Step Mode, Voltage In (mV), Current Force ({:}), Target Force ({:}), Start Gap (m), Current Gap (m), Viscosity (Pa.s), Yield Stress (Pa), Sample Volume (m^3), Viscosity Volume (m^3), Test Active?, Spread beyond hammer?, Error, K_P, Integrated Error, K_I, Error Derivative, K_D\n".format(
                 scale.units, scale.units
             )
         )
@@ -198,7 +200,7 @@ def load_cell_thread():
 
 def actuator_thread():
     """Drives actuator"""
-    global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume
+    global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -295,17 +297,27 @@ def actuator_thread():
             if (
                 visc_volume > 0 and abs(actuator.get_vel_mms()) > 0
             ):  # viscosity estimates only valid if sample volume is positive
+                force_N = OpenScale.grams_to_N(force)
                 eta_guess = abs(
                     2
                     * math.pi
                     * gap**5
-                    * OpenScale.grams_to_N(force)
+                    * force_N
                     / 3
                     / visc_volume**2
                     / (actuator.get_vel_mms() / 1000)
                 )  # Pa.s
+                yield_stress_guess = abs(
+                    3
+                    * math.sqrt(math.pi)
+                    * gap**2.5
+                    * force_N
+                    / 2
+                    / visc_volume**1.5
+                )
         except:
             eta_guess = 0
+            yield_stress_guess = 0
 
         # prevent integral windup
         if abs(int_error) > 1000:
@@ -357,7 +369,7 @@ def actuator_thread():
 
 def background():
     """Records data to csv"""
-    global actuator, start_gap, test_active, spread_beyond_hammer, visc_volume, error, int_error, der_error
+    global actuator, start_gap, test_active, spread_beyond_hammer, visc_volume, error, int_error, der_error, yield_stress_guess
 
     start_time = time()
     while True:
@@ -412,6 +424,7 @@ def background():
                 eta_guess,
                 sample_volume,
                 visc_volume,
+                yield_stress_guess,
                 test_active,
                 spread_beyond_hammer,
                 error,

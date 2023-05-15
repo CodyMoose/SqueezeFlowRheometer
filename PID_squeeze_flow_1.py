@@ -319,7 +319,7 @@ def actuator_thread():
             eta_guess = 0
             yield_stress_guess = 0
 
-        # prevent integral windup
+        # Prevent integral windup
         if abs(int_error) > 1000:
             int_error = 1000 * math.copysign(1000, int_error)
 
@@ -346,24 +346,14 @@ def actuator_thread():
             vel_D,
         )
 
-        # print(force)
         if error < 0:
             out_str += " go slower"
         elif error > 0:
             out_str += " go faster"
         else:
             out_str += " maintain speed"
-        # if(actuator.variables.current_position < lower_limit):
-        # 	actuator.set_vel_mms(backoff_velocity)
-        # 	out_str += " - too low overriding ^^^^"
-        # if(actuator.variables.current_position >= upper_limit):
-        # 	actuator.set_vel_mms(-backoff_velocity)
-        # 	out_str += " - too high overriding vvvv"
 
         print(out_str)
-        # print(force - target)
-        # print(actuator.variables.target_position)
-        # print(actuator.variables.error_status)
         actuator.heartbeat()
 
 
@@ -373,25 +363,16 @@ def background():
 
     start_time = time()
     while True:
-        # print(actuator)
-        # print(actuator.variables)
         cur_pos = actuator.get_pos()
         cur_pos_mm = actuator.steps_to_mm(cur_pos)
-        # tar_pos = actuator.variables.target_position
         tar_pos = actuator.get_variable_by_name("target_position")
         cur_vel = actuator.get_vel()
         cur_vel_mms = actuator.vel_to_mms(cur_vel)
-        # tar_vel = actuator.variables.target_velocity
         tar_vel = actuator.get_variable_by_name("target_velocity")
-        # max_speed = actuator.variables.max_speed
         max_speed = actuator.get_variable_by_name("max_speed")
-        # max_decel = actuator.variables.max_decel
         max_decel = actuator.get_variable_by_name("max_decel")
-        # max_accel = actuator.variables.max_accel
         max_accel = actuator.get_variable_by_name("max_accel")
-        # step_mode = actuator.variables.step_mode
         step_mode = actuator.get_variable_by_name("step_mode")
-        # vin_voltage = actuator.variables.vin_voltage
         vin_voltage = actuator.get_variable_by_name("vin_voltage")
         gap = (
             actuator.get_pos_mm() + start_gap

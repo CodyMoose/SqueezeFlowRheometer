@@ -158,6 +158,7 @@ def load_cell_thread():
         older_error = old_error
         old_error = error
         error = target - force
+        int_error = int_error * 0.997
         int_error += (
             ((old_error + error) / 2 * dt_force) if dt_force > 0 else 0
         )  # trapezoidal integration

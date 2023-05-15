@@ -214,7 +214,7 @@ def actuator_thread():
     actuator.exit_safe_start()
 
     approach_velocity = -1  # mm/s, speed to approach bath of fluid at
-    force_threshold = 2  # g, force must exceed this for control system to kick in.
+    force_threshold = 0.6  # g, force must exceed this for control system to kick in.
     max_force = 80  # g, if force greater than this, stop test.
 
     backoff_velocity = 1  # mm/s

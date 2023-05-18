@@ -70,6 +70,7 @@ K_P = 0.04 / 30.0
 """Proportional control coefficient for error in grams to speed in mm/s"""
 K_I = 0.015 / 30.0
 K_D = 0.0005 / 30.0
+decay_rate = 0.997
 
 times = []
 forces = []
@@ -167,7 +168,7 @@ def load_cell_thread():
         older_error = old_error
         old_error = error
         error = target - force
-        int_error = int_error * 0.997
+        int_error = int_error * decay_rate
         int_error += (
             ((old_error + error) / 2 * dt_force) if dt_force > 0 else 0
         )  # trapezoidal integration

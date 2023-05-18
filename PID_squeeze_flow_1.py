@@ -201,7 +201,7 @@ def load_cell_thread():
 
 def actuator_thread():
     """Drives actuator"""
-    global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess
+    global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess, dt_force
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -334,7 +334,7 @@ def actuator_thread():
         v_new = min(v_new, 0)  # Only go downward
         actuator.set_vel_mms(v_new)
 
-        out_str = "{:6.2f}{:}, err = {:6.2f}, errI = {:6.2f}, errD = {:7.2f}, pos = {:6.2f}, v = {:11.5f} : vP = {:6.2f}, vI = {:6.2f}, vD = {:6.2f}".format(
+        out_str = "{:6.2f}{:}, err = {:6.2f}, errI = {:6.2f}, errD = {:7.2f}, pos = {:6.2f}, v = {:11.5f} : vP = {:6.2f}, vI = {:6.2f}, vD = {:6.2f}, dt = {:6.2f}".format(
             force,
             scale.units,
             error,
@@ -345,6 +345,7 @@ def actuator_thread():
             vel_P,
             vel_I,
             vel_D,
+            dt_force,
         )
 
         if error < 0:

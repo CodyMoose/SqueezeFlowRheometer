@@ -255,6 +255,14 @@ def actuator_thread():
 
     gap = (actuator.get_pos_mm() + start_gap) / 1000.0  # m
 
+    a = 0.07
+    b = 0.002
+    c = 50
+    d = 0.01
+    variable_K_P = lambda er: (b + a) / 2 - (b - a) / 2 * math.tanh(
+        c * (abs(er / target) - d)
+    )
+
     prev_time = time()
     cur_time = time()
     while True:
@@ -326,7 +334,8 @@ def actuator_thread():
         if abs(int_error) > 1000:
             int_error = 1000 * math.copysign(1000, int_error)
 
-        vel_P = -K_P * target * error
+        # vel_P = -K_P * target * error
+        vel_P = -variable_K_P(error) * target * error
         """Proportional component of velocity response"""
         vel_I = -K_I * target * int_error
         """Integral component of velocity response"""

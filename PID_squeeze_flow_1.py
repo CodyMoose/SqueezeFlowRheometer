@@ -66,10 +66,12 @@ int_error = 0
 der_error = 0
 """Time-derivative of error"""
 
-K_P = 0.04 / 30.0
+K_P = 0.07
 """Proportional control coefficient for error in grams to speed in mm/s"""
-K_I = 0.015 / 30.0
-K_D = 0.0005 / 30.0
+K_I = 0.0005
+"""Integral control coefficient for integrated error in grams*s to speed in mm/s"""
+K_D = 0.0000167
+"""Derivative control coefficient for error derivative in grams/s to speed in mm/s"""
 decay_rate = 0.997
 
 times = []

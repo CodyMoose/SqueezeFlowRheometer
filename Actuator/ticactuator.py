@@ -22,7 +22,7 @@ class TicActuator(PyTic):
         serial_nums = self.list_connected_device_serial_numbers()
         self.connect_to_serial_number(serial_nums[0])
 
-        if self.variables.vin_voltage < 7000:
+        if self.get_variable_by_name("vin_voltage") < 7000:
             input("Wait! You didn't turn the power on for the actuator! Do that now.")
 
         self.step_size = step_size  ## mm/step
@@ -89,7 +89,7 @@ class TicActuator(PyTic):
                 pos (int): target position in steps from zero
         """
         self.set_target_position(pos)
-        while self.variables.current_position != self.variables.target_position:
+        while self.get_pos() != self.get_variable_by_name("target_position"):
             sleep(0.05)
             self.reset_command_timeout()
 
@@ -238,7 +238,7 @@ class TicActuator(PyTic):
         if step_mode < 0:
             return self.microstep_ratio
         self.set_step_mode(step_mode)
-        self.microstep_ratio = 2**self.variables.step_mode
+        self.microstep_ratio = 2 ** self.get_variable_by_name("step_mode")
         return self.microstep_ratio
 
     def heartbeat(self):

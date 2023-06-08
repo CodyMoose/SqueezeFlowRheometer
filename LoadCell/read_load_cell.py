@@ -73,8 +73,6 @@ def get_data():
 gd = threading.Thread(name="get_data", target=get_data)
 
 gd.start()
-print("hello")
 
 ani = animation.FuncAnimation(fig, animate, interval=10)
-print("hello1")
 plt.show()

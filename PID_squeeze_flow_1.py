@@ -257,12 +257,19 @@ def actuator_thread():
 
     gap = (actuator.get_pos_mm() + start_gap) / 1000.0  # m
 
-    a = 0.07
+    a = K_P
     b = 0.002
     c = 50
     d = 0.01
-    variable_K_P = lambda er: (b + a) / 2 - (b - a) / 2 * math.tanh(
-        c * (abs(er / target) - d)
+    # variable_K_P = lambda er: (b + a) / 2 - (b - a) / 2 * math.tanh(
+    #     c * (abs(er / target) - d)
+    # )
+    a = 0.07
+    b = 0.015
+    c = 50
+    d = 0.1**2
+    variable_K_P = lambda er: (a + b) / 2 + (a - b) / 2 * math.tanh(
+        c * ((er / target) ** 2 - d)
     )
 
     prev_time = time()

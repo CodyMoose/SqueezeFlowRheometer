@@ -337,11 +337,11 @@ def actuator_thread():
             int_error = 1000 * math.copysign(1000, int_error)
 
         # vel_P = -K_P * target * error
-        vel_P = -variable_K_P(error) * target * error
+        vel_P = -variable_K_P(error) * 10 * error
         """Proportional component of velocity response"""
-        vel_I = -K_I * target * int_error
+        vel_I = -K_I * 10 * int_error
         """Integral component of velocity response"""
-        vel_D = -K_D * target * der_error
+        vel_D = -K_D * 10 * der_error
         """Derivative component of velocity response"""
         v_new = vel_P + vel_D + vel_I
         v_new = min(v_new, 0)  # Only go downward

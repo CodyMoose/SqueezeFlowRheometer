@@ -484,13 +484,6 @@ def animate(i):
     #     forces.pop(0)
     #     gaps.pop(0)
 
-    # Store data & timestamps locally to prevent race conditions due to multithreading, and only get a portion of the points to plot faster.
-    # N_plot = min(1000, len(times))
-    # idxs = np.linspace(0, len(times) - 1, N_plot, dtype=int)
-    # timesTemp = [times[i] for i in idxs]
-    # forcesTemp = [forces[i] for i in idxs]
-    # gapsTemp = [gaps[i] for i in idxs]
-
     timesTemp = times[:]
     forcesTemp = forces[:]
     gapsTemp = gaps[:]

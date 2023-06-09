@@ -257,7 +257,7 @@ class TicActuator(PyTic):
         self.enter_safe_start()
         print("Deenergizing")
         self.deenergize()
-        print(self.variables.error_status)
+        print(self.get_variable_by_name("error_status"))
 
     def get_variable_by_name(self, name: str):
         """Gets actuator variables and keeps trying until success

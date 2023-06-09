@@ -497,7 +497,7 @@ def animate(i):
     plt.xlim(min(timesTemp), max(max(timesTemp), max_time_window))
     plt.title("Sample: {:}".format(sample_str))
 
-    ax1.set_ylim((0, max(2 * target, max(forcesTemp))))
+    ax1.set_ylim((-0.5, max(2 * target, max(forcesTemp))))
     ax2.set_ylim((0, 1000 * max(gapsTemp)))
 
     # Color y-ticks

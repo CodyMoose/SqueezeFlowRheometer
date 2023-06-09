@@ -396,9 +396,7 @@ def background():
         max_accel = actuator.get_variable_by_name("max_accel")
         step_mode = actuator.get_variable_by_name("step_mode")
         vin_voltage = actuator.get_variable_by_name("vin_voltage")
-        gap = (
-            actuator.get_pos_mm() + start_gap
-        ) / 1000.0  # set gap whether or not test is active
+        gap = (cur_pos_mm + start_gap) / 1000.0  # set gap whether or not test is active
 
         with open(
             "data/" + csv_name, "a"

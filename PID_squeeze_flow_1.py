@@ -205,7 +205,7 @@ def load_cell_thread():
 
 def actuator_thread():
     """Drives actuator"""
-    global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess, dt_force
+    global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess, dt_force, times, gaps, forces
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -254,6 +254,16 @@ def actuator_thread():
         # reset integrated error - prevent integral windup
         int_error = 0
     print("Force threshold met, switching over to force-velocity control.")
+
+    # Now that test is active, throw away most of the pre-test data.
+    data_keep_time = 2  # how many seconds to keep
+    data_rate = 10  # roughly how many datapoints I record per second
+    keep_datapoints = data_keep_time * data_rate  # how many datapoints to keep
+    if len(times) > keep_datapoints:
+        # only throw away points if they're older than data_keep_time
+        times = times[-30:]
+        forces = forces[-30:]
+        gaps = gaps[-30:]
 
     gap = (actuator.get_pos_mm() + start_gap) / 1000.0  # m
 

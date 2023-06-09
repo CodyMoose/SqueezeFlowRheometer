@@ -385,7 +385,7 @@ def actuator_thread():
         else:
             out_str += " maintain speed"
 
-        print(out_str)
+        # print(out_str)
         actuator.heartbeat()
 
 
@@ -497,6 +497,8 @@ def animate(i):
     timesTemp = times[:]
     forcesTemp = forces[:]
     gapsTemp = gaps[:]
+
+    # print("{:7d}: {:}".format(len(timesTemp), timesTemp[-1] - timesTemp[0]))
 
     ax1.set_xlabel("Time [s]")
     ax1.set_ylabel("Force [g]", color=color1)

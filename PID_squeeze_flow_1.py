@@ -225,14 +225,6 @@ def actuator_thread():
 
     backoff_velocity = 1  # mm/s
 
-    # upper_limit = -100
-    # lower_limit = -start_gap * 100
-
-    # K_P = 0.04
-    # """Proportional control coefficient for error in grams to speed in mm/s"""
-    # K_I = 0.015
-    # K_D = 0.0005
-
     # Start by approaching and waiting until force is non-negligible
     actuator.set_vel_mms(approach_velocity)
     while True:
@@ -302,42 +294,6 @@ def actuator_thread():
             actuator.go_home_quiet_down()
             return
 
-        # # Get gap
-        # gap = (actuator.get_pos_mm() + start_gap) / 1000.0  # m
-
-        # # Check if sample spread beyond hammer, but only perform the check if it hasn't already
-        # hammer_volume = gap * HAMMER_AREA  # volume under hammer
-        # if not spread_beyond_hammer:
-        #     spread_beyond_hammer = sample_volume > hammer_volume
-
-        # # Guess Newtonian viscosity
-        # visc_volume = min(sample_volume, hammer_volume)
-        # try:
-        #     if (
-        #         visc_volume > 0 and abs(actuator.get_vel_mms()) > 0
-        #     ):  # viscosity estimates only valid if sample volume is positive
-        #         force_N = OpenScale.grams_to_N(force)
-        #         eta_guess = abs(
-        #             2
-        #             * math.pi
-        #             * gap**5
-        #             * force_N
-        #             / 3
-        #             / visc_volume**2
-        #             / (actuator.get_vel_mms() / 1000)
-        #         )  # Pa.s
-        #         yield_stress_guess = abs(
-        #             3
-        #             * math.sqrt(math.pi)
-        #             * gap**2.5
-        #             * force_N
-        #             / 2
-        #             / visc_volume**1.5
-        #         )
-        # except:
-        #     eta_guess = 0
-        #     yield_stress_guess = 0
-
         # Prevent integral windup
         if abs(int_error) > 1000:
             int_error = 1000 * math.copysign(1000, int_error)
@@ -372,7 +328,6 @@ def actuator_thread():
         #     out_str += " go faster"
         # else:
         #     out_str += " maintain speed"
-
         # print(out_str)
 
         actuator.heartbeat()

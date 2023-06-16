@@ -285,12 +285,6 @@ def actuator_thread():
     prev_time = time()
     cur_time = time()
     while True:
-        # print("another step")
-        # Get timestep
-        cur_time = time()
-        dt = cur_time - prev_time
-        prev_time = cur_time
-
         # Check if force beyond max amount
         # print("Force = {:}".format(force))
         if abs(force) > max_force:

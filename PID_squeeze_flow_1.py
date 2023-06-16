@@ -165,10 +165,8 @@ def load_cell_thread():
 
         prev_time = cur_time
         cur_time = time()
-        dt_force_old = dt_force
         dt_force = cur_time - prev_time
 
-        older_error = old_error
         old_error = error
         error = target - force
         # int_error = int_error * decay_rate
@@ -179,22 +177,6 @@ def load_cell_thread():
         der_error = (
             ((error - old_error) / dt_force) if dt_force > 0 else 0
         )  # first order backwards difference
-        # der_error = (
-        #     (
-        #         (2 * dt_force + dt_force_old)
-        #         / (dt_force * (dt_force + dt_force_old))
-        #         * error
-        #         + -(dt_force + dt_force_old) / (dt_force * dt_force_old) * old_error
-        #         + dt_force / (dt_force_old**2 * dt_force * dt_force_old) * older_error
-        #     )
-        #     if (dt_force > 0 and dt_force_old > 0)
-        #     else 0
-        # )  # second order backwards difference
-
-        # # Report error values
-        # print("Error            = {:.2f}".format(error))
-        # print("Integrated error = {:.2f}".format(int_error))
-        # print("Derivative error = {:.2f}".format(der_error))
 
         if (time() - start_time) >= 2000 or (
             (not ac.is_alive()) and (not b.is_alive()) and (time() - start_time) > 1

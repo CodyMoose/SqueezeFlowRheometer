@@ -364,26 +364,26 @@ def actuator_thread():
         v_new = min(v_new, 0)  # Only go downward
         actuator.set_vel_mms(v_new)
 
-        out_str = "{:6.2f}{:}, err = {:6.2f}, errI = {:6.2f}, errD = {:7.2f}, pos = {:6.2f}, v = {:11.5f} : vP = {:6.2f}, vI = {:6.2f}, vD = {:6.2f}, dt = {:6.2f}".format(
-            force,
-            scale.units,
-            error,
-            int_error,
-            der_error,
-            actuator.get_pos_mm(),
-            v_new,
-            vel_P,
-            vel_I,
-            vel_D,
-            dt_force,
-        )
+        # out_str = "{:6.2f}{:}, err = {:6.2f}, errI = {:6.2f}, errD = {:7.2f}, pos = {:6.2f}, v = {:11.5f} : vP = {:6.2f}, vI = {:6.2f}, vD = {:6.2f}, dt = {:6.2f}".format(
+        #     force,
+        #     scale.units,
+        #     error,
+        #     int_error,
+        #     der_error,
+        #     actuator.get_pos_mm(),
+        #     v_new,
+        #     vel_P,
+        #     vel_I,
+        #     vel_D,
+        #     dt_act,
+        # )
 
-        if error < 0:
-            out_str += " go slower"
-        elif error > 0:
-            out_str += " go faster"
-        else:
-            out_str += " maintain speed"
+        # if error < 0:
+        #     out_str += " go slower"
+        # elif error > 0:
+        #     out_str += " go faster"
+        # else:
+        #     out_str += " maintain speed"
 
         # print(out_str)
         actuator.heartbeat()

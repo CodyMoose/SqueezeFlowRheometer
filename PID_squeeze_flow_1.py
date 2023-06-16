@@ -75,6 +75,14 @@ K_D = 0.000167
 decay_rate = 0.997
 decay_rate_r = -0.1502
 
+a = 0.7
+b = 0.15
+c = 50
+d = 0.1**2
+variable_K_P = lambda er, tar: (a + b) / 2 + (a - b) / 2 * math.tanh(
+    c * ((er / tar) ** 2 - d)
+)
+
 times = []
 forces = []
 gaps = []
@@ -240,16 +248,6 @@ def actuator_thread():
         forces = forces[-30:]
         gaps = gaps[-30:]
 
-    gap = (actuator.get_pos_mm() + start_gap) / 1000.0  # m
-
-    a = 0.7
-    b = 0.15
-    c = 50
-    d = 0.1**2
-    variable_K_P = lambda er: (a + b) / 2 + (a - b) / 2 * math.tanh(
-        c * ((er / target) ** 2 - d)
-    )
-
     prev_time = time()
     cur_time = time()
     while True:
@@ -281,7 +279,7 @@ def actuator_thread():
             int_error = 1000 * math.copysign(1000, int_error)
 
         # vel_P = -K_P * error
-        vel_P = -variable_K_P(error) * error
+        vel_P = -variable_K_P(error, target) * error
         """Proportional component of velocity response"""
         vel_I = -K_I * int_error
         """Integral component of velocity response"""
@@ -365,7 +363,7 @@ def background():
                 test_active,
                 spread_beyond_hammer,
                 error,
-                K_P,
+                variable_K_P(error, target),
                 int_error,
                 K_I,
                 der_error,

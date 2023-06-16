@@ -363,8 +363,7 @@ def actuator_thread():
         #     v_new,
         #     vel_P,
         #     vel_I,
-        #     vel_D,
-        #     dt_act,
+        #     vel_D
         # )
 
         # if error < 0:
@@ -375,6 +374,7 @@ def actuator_thread():
         #     out_str += " maintain speed"
 
         # print(out_str)
+
         actuator.heartbeat()
 
 

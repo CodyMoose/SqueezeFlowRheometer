@@ -205,7 +205,8 @@ def load_cell_thread():
 
 def actuator_thread():
     """Drives actuator"""
-    global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess, dt_force, times, gaps, forces
+    # global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess, times, gaps, forces
+    global error, int_error, der_error, test_active, times, gaps, forces
 
     print("Waiting 2 seconds before starting")
     sleep(2)

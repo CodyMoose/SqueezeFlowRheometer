@@ -66,11 +66,11 @@ int_error = 0
 der_error = 0
 """Time-derivative of error"""
 
-K_P = 0.07
+K_P = 0.7
 """Proportional control coefficient for error in grams to speed in mm/s"""
-K_I = 0.0005
+K_I = 0.005
 """Integral control coefficient for integrated error in grams*s to speed in mm/s"""
-K_D = 0.0000167
+K_D = 0.000167
 """Derivative control coefficient for error derivative in grams/s to speed in mm/s"""
 decay_rate = 0.997
 decay_rate_r = -0.1502
@@ -268,15 +268,8 @@ def actuator_thread():
 
     gap = (actuator.get_pos_mm() + start_gap) / 1000.0  # m
 
-    a = K_P
-    b = 0.002
-    c = 50
-    d = 0.01
-    # variable_K_P = lambda er: (b + a) / 2 - (b - a) / 2 * math.tanh(
-    #     c * (abs(er / target) - d)
-    # )
-    a = 0.07
-    b = 0.015
+    a = 0.7
+    b = 0.15
     c = 50
     d = 0.1**2
     variable_K_P = lambda er: (a + b) / 2 + (a - b) / 2 * math.tanh(
@@ -349,12 +342,12 @@ def actuator_thread():
         if abs(int_error) > 1000:
             int_error = 1000 * math.copysign(1000, int_error)
 
-        # vel_P = -K_P * target * error
-        vel_P = -variable_K_P(error) * 10 * error
+        # vel_P = -K_P * error
+        vel_P = -variable_K_P(error) * error
         """Proportional component of velocity response"""
-        vel_I = -K_I * 10 * int_error
+        vel_I = -K_I * int_error
         """Integral component of velocity response"""
-        vel_D = -K_D * 10 * der_error
+        vel_D = -K_D * der_error
         """Derivative component of velocity response"""
         v_new = vel_P + vel_D + vel_I
         v_new = min(v_new, 0)  # Only go downward

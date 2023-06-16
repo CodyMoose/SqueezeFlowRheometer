@@ -150,7 +150,7 @@ def load_cell_thread():
 
     start_time = time()
 
-    for i in range(10):  # get rid of first few lines that aren't readings
+    for _ in range(10):  # get rid of first few lines that aren't readings
         scale.get_line()
     scale.flush_old_lines()  # and get rid of any others that were generated when we were busy setting up
 

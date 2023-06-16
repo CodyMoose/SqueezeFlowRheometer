@@ -300,14 +300,15 @@ def actuator_thread():
             return
 
         # Check if went too far
-        if abs(actuator.get_pos_mm()) >= start_gap:
+        cur_pos = abs(actuator.get_pos_mm())
+        if cur_pos >= start_gap:
             print("Hit the hard-stop, stopping.")
             test_active = False
             actuator.go_home_quiet_down()
             return
 
         # Check if returned towards zero too far
-        if abs(actuator.get_pos_mm()) <= 1:
+        if cur_pos <= 1:
             print("Returned too close to home, stopping.")
             test_active = False
             actuator.go_home_quiet_down()

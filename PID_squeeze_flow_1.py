@@ -248,8 +248,6 @@ def actuator_thread():
         forces = forces[-30:]
         gaps = gaps[-30:]
 
-    prev_time = time()
-    cur_time = time()
     while True:
         # Check if force beyond max amount
         # print("Force = {:}".format(force))

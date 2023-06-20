@@ -7,7 +7,7 @@ from LoadCell.openscale import OpenScale
 from Actuator.ticactuator import TicActuator
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-import numpy as np
+import json
 
 # - Initialization -------------------------------------------
 
@@ -89,6 +89,24 @@ gaps = []
 
 if __name__ == "__main__":
     scale = OpenScale()
+
+    # Input test values from external settings file
+    settings_path = "LoadCell\config.json"
+    with open(settings_path, "r") as read_file:
+        settings = json.load(read_file)
+        K_P = settings["K_P"]
+        K_I = settings["K_I"]
+        K_D = settings["K_D"]
+        decay_rate_r = settings["decay_rate_r"]
+        a = settings["a"]
+        b = settings["b"]
+        c = settings["c"]
+        d = settings["d"]
+
+    # Update variable control parameter based on settings values
+    variable_K_P = lambda er, tar: (a + b) / 2 + (a - b) / 2 * math.tanh(
+        c * ((er / tar) ** 2 - d)
+    )
 
     # Get test details from user
     target_line = input("Enter the target force in [{:}]: ".format(scale.units))

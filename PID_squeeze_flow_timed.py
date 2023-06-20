@@ -170,6 +170,21 @@ def input_test_duration() -> float:
     return test_dur
 
 
+def check_tare():
+    """Check if load cell is within tare, otherwise tare it."""
+    weight = None
+    while weight is None:
+        weight = scale.wait_for_calibrated_measurement(True)
+    if abs(weight) > 0.5:
+        ans = input(
+            "The load cell is out of tare! Current reading is {:.2f}{:}. Do you want to tare it now? (y/n) ".format(
+                weight, scale.units
+            )
+        )
+        if ans == "y":
+            scale.tare()
+
+
 if __name__ == "__main__":
     scale = OpenScale()
 
@@ -198,17 +213,13 @@ if __name__ == "__main__":
     test_duration = input_test_duration()
     sample_str = input("What's the sample made of? This will be used for file naming. ")
 
-    weight = None
-    while weight is None:
-        weight = scale.wait_for_calibrated_measurement(True)
-    if abs(weight) > 0.5:
-        ans = input(
-            "The load cell is out of tare! Current reading is {:.2f}{:}. Do you want to tare it now? (y/n) ".format(
-                weight, scale.units
-            )
-        )
-        if ans == "y":
-            scale.tare()
+    # # Get test details from settings file & config file
+    # target = settings["targets"]
+    # test_duration = settings["test_duration"]
+    # sample_str = settings["sample_str"]
+    # start_gap = float(scale.config["gap"])
+
+    check_tare()
 
     actuator = TicActuator(step_mode=4)
     actuator.set_max_accel_mmss(20, True)

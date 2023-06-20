@@ -147,9 +147,7 @@ def input_sample_volume() -> float:
 
 def check_tare():
     """Check if load cell is within tare, otherwise tare it."""
-    weight = None
-    while weight is None:
-        weight = scale.wait_for_calibrated_measurement(True)
+    weight = scale.wait_for_calibrated_measurement(True)
     if abs(weight) > 0.5:
         ans = input(
             "The load cell is out of tare! Current reading is {:.2f}{:}. Do you want to tare it now? (y/n) ".format(

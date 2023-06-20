@@ -87,6 +87,65 @@ times = []
 forces = []
 gaps = []
 
+
+def find_num_in_str(inp: str) -> float:
+    """Finds a number in a string potentially containing additional exraneous text
+
+    Args:
+        inp (str): input string that contains a number and could have extra whitespace, punctuation, or other
+
+    Returns:
+        float: the number contained therein, now parsed as a positive float
+    """
+    temp = re.compile("[0-9.]+")
+    res = temp.search(inp).group(0)
+    return abs(float(res))
+
+
+def input_target(scale_unit: str) -> float:
+    """Gets the target force from the user
+
+    Args:
+        inp (str): units of the scale calibration to get appropriate user input
+
+    Returns:
+        float: target force in units the scale is calibrated to
+    """
+    target_line = input("Enter the target force in [{:}]: ".format(scale_unit))
+    tar = find_num_in_str(target_line)
+    print("Target force is {:.2f}{:}".format(tar, scale_unit))
+    return tar
+
+
+def input_start_gap() -> float:
+    """Gets start gap in mm from user.
+
+    Returns:
+        float: the start gap in mm
+    """
+    gap_line = input(
+        "Enter the current gap in [mm]. If you want to use the gap in the config file, just hit Enter: "
+    )
+    if "config" in gap_line.lower() or len(gap_line) <= 0:
+        gap = float(scale.config["gap"])
+    else:
+        gap = find_num_in_str(gap_line)
+    print("Starting gap is {:.2f}mm".format(gap))
+    return gap
+
+
+def input_sample_volume() -> float:
+    """Gets sample volume in mL from user
+
+    Returns:
+        float: sample volume in mL
+    """
+    vol_line = input("Enter the sample volume in [mL]: ")
+    sample_vol = find_num_in_str(vol_line) * 1e-6  # m^3
+    print("Sample volume is {:.2f}mL".format(sample_vol * 1e6))
+    return sample_vol
+
+
 if __name__ == "__main__":
     scale = OpenScale()
 
@@ -109,29 +168,9 @@ if __name__ == "__main__":
     )
 
     # Get test details from user
-    target_line = input("Enter the target force in [{:}]: ".format(scale.units))
-    temp = re.compile("[0-9.]+")
-    res = temp.search(target_line).group(0)
-    target = float(res)
-    print("Target force is {:.2f}{:}".format(target, scale.units))
-
-    gap_line = input(
-        "Enter the current gap in [mm]. If you want to use the gap in the config file, type 'config': "
-    )
-    if "config" in gap_line.lower():
-        start_gap = float(scale.config["gap"])
-    else:
-        temp = re.compile("[0-9.]+")
-        res = temp.search(gap_line).group(0)
-        start_gap = abs(float(res))
-    print("Starting gap is {:.2f}mm".format(start_gap))
-
-    vol_line = input("Enter the sample volume in [mL]: ")
-    temp = re.compile("[0-9.]+")
-    res = temp.search(vol_line).group(0)
-    sample_volume = abs(float(res)) * 1e-6  # m^3
-    print("Sample volume is {:.2f}mL".format(sample_volume * 1e6))
-
+    target = input_target(scale.units)
+    start_gap = input_start_gap()
+    sample_volume = input_sample_volume()
     sample_str = input("What's the sample made of? This will be used for file naming. ")
 
     weight = None

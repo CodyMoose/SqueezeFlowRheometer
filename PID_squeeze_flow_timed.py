@@ -7,7 +7,6 @@ from LoadCell.openscale import OpenScale
 from Actuator.ticactuator import TicActuator
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-import numpy as np
 import json
 
 # - Initialization -------------------------------------------

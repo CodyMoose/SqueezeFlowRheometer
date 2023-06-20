@@ -75,7 +75,6 @@ K_I = 0.005
 """Integral control coefficient for integrated error in grams*s to speed in mm/s"""
 K_D = 0.000167
 """Derivative control coefficient for error derivative in grams/s to speed in mm/s"""
-decay_rate = 0.997
 decay_rate_r = -0.1502
 
 a = 0.7
@@ -277,7 +276,7 @@ if __name__ == "__main__":
 
 def load_cell_thread():
     """Continuously reads load cell and reports the upward force on the load cell"""
-    global force, dt_force, error, der_error, int_error, decay_rate, decay_rate_r
+    global force, dt_force, error, der_error, int_error, decay_rate_r
 
     start_time = time()
 
@@ -300,7 +299,6 @@ def load_cell_thread():
 
         old_error = error
         error = target - force
-        # int_error = int_error * decay_rate
         int_error = int_error * math.exp(decay_rate_r * dt_force)
         int_error += (
             ((old_error + error) / 2 * dt_force) if dt_force > 0 else 0

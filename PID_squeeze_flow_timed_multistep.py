@@ -221,7 +221,7 @@ if __name__ == "__main__":
     scale = OpenScale()
 
     # Input test values from external settings file
-    settings_path = "LoadCell\config.json"
+    settings_path = "test_settings.json"
     with open(settings_path, "r") as read_file:
         settings = json.load(read_file)
         K_P = settings["K_P"]

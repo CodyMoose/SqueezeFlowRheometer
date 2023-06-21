@@ -17,5 +17,6 @@
     "d": 0.01,
     "actuator_step_mode": 4,
     "actuator_max_accel_mmss": 20,
-    "actuator_max_speed_mms": 5
+    "actuator_max_speed_mms": 5,
+    "ref_gap": 0.006
 }

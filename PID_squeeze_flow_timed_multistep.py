@@ -77,6 +77,7 @@ K_I = 0.005
 K_D = 0.000167
 """Derivative control coefficient for error derivative in grams/s to speed in mm/s"""
 decay_rate_r = -0.1502
+ref_gap = 0
 
 a = 0.7
 b = 0.15
@@ -233,6 +234,7 @@ if __name__ == "__main__":
         b = settings["b"]
         c = settings["c"]
         d = settings["d"]
+        ref_gap = settings["ref_gap"]
 
     # Update variable control parameter based on settings values
     variable_K_P = lambda er, tar: (a + b) / 2 + (a - b) / 2 * math.tanh(
@@ -322,7 +324,7 @@ def load_cell_thread():
 def actuator_thread():
     """Drives actuator"""
     # global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess, times, gaps, forces
-    global error, int_error, der_error, test_active, times, gaps, forces, target, step_id
+    global error, int_error, der_error, test_active, times, gaps, forces, target, step_id, gap
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -386,15 +388,16 @@ def actuator_thread():
             return
 
         # Check if went too far
-        cur_pos = abs(actuator.get_pos_mm())
-        if cur_pos >= start_gap:
+        cur_pos_mm = abs(actuator.get_pos_mm())
+        gap = (cur_pos_mm + start_gap) / 1000.0  # set gap whether or not test is active
+        if cur_pos_mm >= start_gap:
             print("Hit the hard-stop, stopping.")
             test_active = False
             actuator.go_home_quiet_down()
             return
 
         # Check if returned towards zero too far
-        if cur_pos <= 1:
+        if cur_pos_mm <= 1:
             print("Returned too close to home, stopping.")
             test_active = False
             actuator.go_home_quiet_down()
@@ -423,6 +426,7 @@ def actuator_thread():
         vel_D = -K_D * der_error
         """Derivative component of velocity response"""
         v_new = vel_P + vel_D + vel_I
+        v_new = v_new * gap / ref_gap  # go slower when gap is small
         v_new = min(v_new, 0)  # Only go downward
         actuator.set_vel_mms(v_new)
 
@@ -444,7 +448,7 @@ def actuator_thread():
 
 def background():
     """Records data to csv"""
-    global actuator, start_gap, test_active, spread_beyond_hammer, visc_volume, error, int_error, der_error, yield_stress_guess
+    global actuator, start_gap, test_active, spread_beyond_hammer, visc_volume, error, int_error, der_error, yield_stress_guess, gap
 
     start_time = time()
     while True:

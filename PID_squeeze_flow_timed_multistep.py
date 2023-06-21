@@ -344,7 +344,6 @@ def actuator_thread():
     # Start by approaching and waiting until force is non-negligible
     actuator.set_vel_mms(approach_velocity)
     while True:
-        # print("{:6.2f} <? {:6.2f}".format(force, force_threshold))
         actuator.heartbeat()
         if abs(force) > max_force:
             test_active = False
@@ -353,7 +352,6 @@ def actuator_thread():
         if abs(force) > force_threshold:
             test_active = True
             break
-        # print("{:6.2f} >=? {:6.2f}".format(get_pos_mm(), start_gap))
         if abs(actuator.get_pos_mm()) >= start_gap:
             print("Hit the hard-stop without ever exceeding threshold force, stopping.")
             test_active = False
@@ -362,6 +360,7 @@ def actuator_thread():
 
         # reset integrated error - prevent integral windup
         int_error = 0
+
     print("Force threshold met, switching over to force-velocity control.")
 
     # Now that test is active, throw away most of the pre-test data.
@@ -380,7 +379,6 @@ def actuator_thread():
     target = targets[step_id]
     while True:
         # Check if force beyond max amount
-        # print("Force = {:}".format(force))
         if abs(force) > max_force:
             print("Force was too large, stopping.")
             test_active = False
@@ -440,14 +438,6 @@ def actuator_thread():
         #     vel_I,
         #     vel_D
         # )
-
-        # if error < 0:
-        #     out_str += " go slower"
-        # elif error > 0:
-        #     out_str += " go faster"
-        # else:
-        #     out_str += " maintain speed"
-        # print(out_str)
 
         actuator.heartbeat()
 

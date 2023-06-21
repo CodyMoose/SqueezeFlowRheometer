@@ -313,7 +313,7 @@ def load_cell_thread():
         )  # first order backwards difference
 
         if (time() - start_time) >= 2000 or (
-            (not ac.is_alive()) and (not b.is_alive()) and (time() - start_time) > 1
+            (not ac.is_alive()) and (not bkg.is_alive()) and (time() - start_time) > 1
         ):
             print("Stopping load cell reading")
             break
@@ -531,11 +531,11 @@ def background():
 
 lc = threading.Thread(name="loadcell", target=load_cell_thread)
 ac = threading.Thread(name="actuator", target=actuator_thread)
-b = threading.Thread(name="background", target=background)
+bkg = threading.Thread(name="background", target=background)
 
 lc.start()
 ac.start()
-b.start()
+bkg.start()
 
 max_time_window = 30
 fig = plt.figure()

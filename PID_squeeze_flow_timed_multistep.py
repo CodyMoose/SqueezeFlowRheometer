@@ -38,6 +38,8 @@ target = 0
 """Target force. Negative is a force pushing up on the load cell"""
 targets = []
 """Monotonically increasing list of target forces. Will run a test on each force, one after the other."""
+step_id = 0
+"""Which target step the test is currently on. 0 is the first step"""
 FORCE_UP_SIGN = 1
 """Sign of a positive force. This should be 1 or -1, and is used to compute velocity based on force"""
 dt_force = 0
@@ -239,6 +241,7 @@ if __name__ == "__main__":
 
     # Get test details from user
     targets = input_targets(scale.units)
+    target = targets[step_id]
     start_gap = input_start_gap()
     test_duration = input_step_duration()
     sample_volume = input_sample_volume()
@@ -319,7 +322,7 @@ def load_cell_thread():
 def actuator_thread():
     """Drives actuator"""
     # global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess, times, gaps, forces
-    global error, int_error, der_error, test_active, times, gaps, forces
+    global error, int_error, der_error, test_active, times, gaps, forces, target, step_id
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -373,6 +376,8 @@ def actuator_thread():
 
     start_time = time()
     end_test_procedure = False
+    step_id = 0
+    target = targets[step_id]
     while True:
         # Check if force beyond max amount
         # print("Force = {:}".format(force))
@@ -398,10 +403,15 @@ def actuator_thread():
             return
 
         if time() - start_time >= test_duration:
-            print("Time limit reached, ending test.")
-            test_active = False
-            actuator.go_home_quiet_down()
-            return
+            step_id = step_id + 1
+            if step_id < len(targets):
+                print("Step time limit reached, next step.")
+                target = targets[step_id]
+                start_time = time()
+            else:
+                test_active = False
+                actuator.go_home_quiet_down()
+                return
 
         # Prevent integral windup
         if abs(int_error) > 1000:

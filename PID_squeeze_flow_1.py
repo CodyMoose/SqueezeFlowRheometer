@@ -307,9 +307,9 @@ def actuator_thread():
     keep_datapoints = data_keep_time * data_rate  # how many datapoints to keep
     if len(times) > keep_datapoints:
         # only throw away points if they're older than data_keep_time
-        times = times[-30:]
-        forces = forces[-30:]
-        gaps = gaps[-30:]
+        times = times[-keep_datapoints:]
+        forces = forces[-keep_datapoints:]
+        gaps = gaps[-keep_datapoints:]
 
     while True:
         # Check if force beyond max amount

@@ -1,0 +1,21 @@
+{
+    "targets": [
+        5,
+        10,
+        15,
+        20
+    ],
+    "test_duration": 250,
+    "sample_str": "ChocPudding",
+    "K_P": 0.7,
+    "K_I": 0.005,
+    "K_D": 0.000167,
+    "decay_rate_r": -0.1502,
+    "a": 0.7,
+    "b": 0.15,
+    "c": 50,
+    "d": 0.01,
+    "actuator_step_mode": 4,
+    "actuator_max_accel_mmss": 20,
+    "actuator_max_speed_mms": 5
+}

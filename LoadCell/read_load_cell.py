@@ -10,6 +10,7 @@ scale = openscale.OpenScale()
 
 readings = []
 times = []
+means = []
 max_time_window = 7  # how many seconds of readings to store and plot.
 start_time = time()
 
@@ -30,12 +31,14 @@ def animate(i):
     # Store data & timestamps locally to prevent race conditions due to multithreading
     timesTemp = times[:]
     readingsTemp = readings[:]
+    meansTemp = means[:]
     if len(timesTemp) < 1:
         return
 
     ax1.set_xlabel("Time [s]")
     ax1.set_ylabel("data1 [-]", color=color1)
     ax1.plot(timesTemp, readingsTemp, color1, label="data1")
+    ax1.plot(timesTemp, meansTemp, color2, label="Mean")
     plt.xlim(min(timesTemp), max(max(timesTemp), max_time_window))
     # ax2.set_ylabel("data2 [-]", color=color2)
     # ax2.plot(timesTemp, [-2 * r for r in readingsTemp], color2, label="data2")
@@ -61,11 +64,13 @@ def get_data():
         # Grab new data & timestamp
         readings.append(weight)
         times.append(time() - start_time)
+        means.append(sum(readings) / len(readings))
 
         # Throw away data & timestamps that are too old. There is definitely a smarter/faster way to do this.
         while times[-1] - times[0] > max_time_window:
             readings.pop(0)
             times.pop(0)
+            means.pop(0)
 
         # sleep(0.01)
 

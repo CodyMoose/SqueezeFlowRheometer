@@ -55,11 +55,8 @@ def get_data():
     global readings, times, max_time_window  # , scale
     while True:
         weight = scale.wait_for_calibrated_measurement()
-        if weight is None:  # if startup garbage not gone yet
-            continue
 
         print("{:6.2f}{:}".format(weight, scale.units))
-        # weight = 10 * math.sin(time())
 
         # Grab new data & timestamp
         readings.append(weight)
@@ -71,8 +68,6 @@ def get_data():
             readings.pop(0)
             times.pop(0)
             means.pop(0)
-
-        # sleep(0.01)
 
 
 gd = threading.Thread(name="get_data", target=get_data)

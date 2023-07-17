@@ -97,7 +97,7 @@ def load_cell_thread():
 
 def actuator_thread():
     """Drives actuator"""
-    global gap, eta_guess
+    global gap
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -138,7 +138,7 @@ def actuator_thread():
         # print("{:6.2f} >=? {:6.2f}".format(get_pos_mm() / 1000.0, start_gap))
     print("Force threshold met, switching over to fine approach.")
 
-    N_find = 5
+    N_find = 25
     gap_list = [0] * N_find
     slowdown_factor = 0.05  # what factor to slow down by on fine approach
 
@@ -201,12 +201,10 @@ def actuator_thread():
 
 def background():
     """Records data to csv"""
-    global tic
+    global actuator
 
     start_time = time()
     while True:
-        # print(tic)
-        # print(tic.variables)
         cur_pos_mm = actuator.get_pos_mm()
         cur_pos = actuator.get_pos()
         tar_pos = actuator.variables.target_position

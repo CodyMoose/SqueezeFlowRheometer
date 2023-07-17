@@ -352,7 +352,7 @@ def actuator_thread():
             test_active = False
             actuator.go_home_quiet_down()
             break
-        if abs(force) > force_threshold:
+        if force > force_threshold:
             test_active = True
             break
         if abs(actuator.get_pos_mm()) >= start_gap:

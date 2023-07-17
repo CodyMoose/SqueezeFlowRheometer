@@ -381,6 +381,14 @@ def actuator_thread():
     end_test_procedure = False
     step_id = 0
     target = targets[step_id]
+
+    gap_m = (actuator.get_pos_mm() + start_gap) / 1000.0  # current gap in m
+    ref_gap = max(
+        ref_gap, gap_m
+    )  # if sample volume is large, might need to increase the ref gap
+
+    mute_derivative_term_steps = 0
+    mute_derivative_term_steps_max = 100
     while True:
         # Check if force beyond max amount
         if abs(force) > max_force:
@@ -392,8 +400,8 @@ def actuator_thread():
             return
 
         # Check if went too far
-        cur_pos_mm = abs(actuator.get_pos_mm())
-        gap = (cur_pos_mm + start_gap) / 1000.0  # set gap whether or not test is active
+        cur_pos_mm = actuator.get_pos_mm()
+        gap_m = (cur_pos_mm + start_gap) / 1000.0  # current gap in m
         if cur_pos_mm >= start_gap:
             print("Hit the hard-stop, stopping.")
             test_active = False
@@ -401,7 +409,7 @@ def actuator_thread():
             return
 
         # Check if returned towards zero too far
-        if cur_pos_mm <= 1:
+        if abs(cur_pos_mm) <= 1:
             print("Returned too close to home, stopping.")
             test_active = False
             actuator.go_home_quiet_down()
@@ -413,6 +421,7 @@ def actuator_thread():
                 print("Step time limit reached, next step.")
                 target = targets[step_id]
                 start_time = time()
+                mute_derivative_term_steps = mute_derivative_term_steps_max
             else:
                 test_active = False
                 actuator.go_home_quiet_down()
@@ -429,9 +438,17 @@ def actuator_thread():
         """Integral component of velocity response"""
         vel_D = -K_D * der_error
         """Derivative component of velocity response"""
-        v_new = vel_P + vel_D + vel_I
-        v_new = v_new * gap / ref_gap  # go slower when gap is small
-        v_new = min(v_new, 0)  # Only go downward
+
+        if mute_derivative_term_steps > 0:
+            mute_derivative_term_steps = mute_derivative_term_steps - 1
+            der_error = 0
+            vel_D = 0
+
+        # v_new = vel_P + vel_D + vel_I
+        v_new = vel_P + vel_I
+        # v_new = vel_P
+        v_new = v_new * (gap_m / ref_gap) ** 2  # go slower when gap is small
+        # v_new = min(v_new, 0)  # Only go downward
         actuator.set_vel_mms(v_new)
 
         # out_str = "{:6.2f}{:}, err = {:6.2f}, errI = {:6.2f}, errD = {:7.2f}, pos = {:6.2f}, v = {:11.5f} : vP = {:6.2f}, vI = {:6.2f}, vD = {:6.2f}, dt = {:6.2f}".format(

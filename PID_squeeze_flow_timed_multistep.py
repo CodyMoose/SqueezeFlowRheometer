@@ -92,6 +92,7 @@ test_duration = 0
 times = []
 forces = []
 gaps = []
+yieldStressGuesses = []
 
 
 def input_targets(scale_unit: str) -> list[float]:
@@ -324,7 +325,7 @@ def load_cell_thread():
 def actuator_thread():
     """Drives actuator"""
     # global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess, times, gaps, forces
-    global error, int_error, der_error, test_active, times, gaps, forces, target, step_id, gap
+    global error, int_error, der_error, test_active, times, gaps, forces, yieldStressGuesses, target, step_id, ref_gap
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -374,6 +375,7 @@ def actuator_thread():
         times = times[-keep_datapoints:]
         forces = forces[-keep_datapoints:]
         gaps = gaps[-keep_datapoints:]
+        yieldStressGuesses = yieldStressGuesses[-keep_datapoints:]
 
     start_time = time()
     end_test_procedure = False
@@ -467,6 +469,15 @@ def background():
         vin_voltage = actuator.get_variable_by_name("vin_voltage")
         gap = (cur_pos_mm + start_gap) / 1000.0  # set gap whether or not test is active
 
+        visc_volume = min(sample_volume, HAMMER_AREA * gap)
+        yield_stress_guess = (
+            1.5
+            * math.sqrt(math.pi)
+            * OpenScale.grams_to_N(force)
+            * (gap) ** 2.5
+            / ((visc_volume) ** 1.5)
+        )
+
         with open(
             "data/" + csv_name, "a"
         ) as datafile:  # write time & current details to csv
@@ -511,6 +522,7 @@ def background():
         times.append(cur_duration)
         forces.append(force)
         gaps.append(gap)
+        yieldStressGuesses.append(yield_stress_guess)
 
         sleep(0.02)
 
@@ -534,18 +546,25 @@ ac.start()
 bkg.start()
 
 max_time_window = 30
-fig = plt.figure()
+fig = plt.figure(figsize=(7.2, 4.8))
 ax1 = fig.add_subplot(1, 1, 1)
 ax2 = ax1.twinx()
+ax3 = ax1.twinx()
 
 color1 = "C0"
 color2 = "C1"
+color3 = "C2"
 
 
 def animate(i):
-    global ax1, ax2, times, forces, gaps
+    global ax1, ax2, times, forces, gaps, yieldStressGuesses
+
+    if len(times) <= 0:
+        return
+
     ax1.clear()
     ax2.clear()
+    ax3.clear()
 
     # Throw away data & timestamps that are too old.
     # while times[-1] - times[0] > max_time_window:
@@ -556,15 +575,19 @@ def animate(i):
     timesTemp = times[:]
     forcesTemp = forces[:]
     gapsTemp = gaps[:]
+    yieldStressGuessesTemp = yieldStressGuesses[:]
 
     # print("{:7d}: {:}".format(len(timesTemp), timesTemp[-1] - timesTemp[0]))
 
     ax1.set_xlabel("Time [s]")
     ax1.set_ylabel("Force [g]", color=color1)
     ax2.set_ylabel("Gap [mm]", color=color2)
+    ax3.set_ylabel("Yield Stress [Pa]", color=color3)
 
     ax1.plot(timesTemp, forcesTemp, color1, label="Force")
     ax2.plot(timesTemp, [1000 * g for g in gapsTemp], color2, label="Gap")
+    ax3.plot(timesTemp, yieldStressGuessesTemp, color3, label="Yield Stress")
+
     plt.xlim(min(timesTemp), max(max(timesTemp), max_time_window))
     plt.title("Sample: {:}".format(sample_str))
 
@@ -574,11 +597,27 @@ def animate(i):
     # Color y-ticks
     ax1.tick_params(axis="y", colors=color1)
     ax2.tick_params(axis="y", colors=color2)
+    ax3.tick_params(axis="y", colors=color3)
 
     # Color y-axes
     ax1.spines["left"].set_color(color1)
     ax2.spines["left"].set_alpha(0)  # hide second left y axis to show first one
     ax2.spines["right"].set_color(color2)
+    ax3.spines["left"].set_alpha(0)  # hide third left y axis to show first one
+    ax3.spines["right"].set_color(color3)
+
+    # ax3.spines["right"].set_position(
+    #     ("axes", 1.1)
+    # )  # move it further right to prevent overlap
+    ax3.spines["right"].set_position(
+        ("outward", 10)
+    )  # move it further right to prevent overlap
+
+    ax1.grid(True)
+    ax2.grid(False)
+    ax3.grid(False)
+
+    # plt.axis("tight")
 
 
 ani = animation.FuncAnimation(fig, animate, interval=10)

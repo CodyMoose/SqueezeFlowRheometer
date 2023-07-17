@@ -423,6 +423,7 @@ def actuator_thread():
                 start_time = time()
                 mute_derivative_term_steps = mute_derivative_term_steps_max
             else:
+                print("Last step complete. Test is done.")
                 test_active = False
                 actuator.go_home_quiet_down()
                 return

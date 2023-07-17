@@ -315,7 +315,7 @@ def load_cell_thread():
             ((error - old_error) / dt_force) if dt_force > 0 else 0
         )  # first order backwards difference
 
-        if (time() - start_time) >= 2000 or (
+        if (time() - start_time) >= 7200 or (
             (not ac.is_alive()) and (not bkg.is_alive()) and (time() - start_time) > 1
         ):
             print("Stopping load cell reading")
@@ -526,7 +526,7 @@ def background():
 
         sleep(0.02)
 
-        if (time() - start_time) >= 2000 or (
+        if (time() - start_time) >= 7200 or (
             (not ac.is_alive()) and (time() - start_time) > 1
         ):
             print("Time since started: {:.0f}".format(time() - start_time))

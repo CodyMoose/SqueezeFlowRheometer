@@ -382,7 +382,9 @@ def actuator_thread():
     while True:
         # Check if force beyond max amount
         if abs(force) > max_force:
-            print("Force was too large, stopping.")
+            print(
+                "Force was too large, stopping - {:3.2f}{:}".format(force, scale.units)
+            )
             test_active = False
             actuator.go_home_quiet_down()
             return

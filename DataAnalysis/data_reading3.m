@@ -190,4 +190,5 @@ ylabel('Yield Stress [Pa]')
 % Add legend for the first/main plot handle
 hLegend = legend('location','southwest');
 hLegend.NumColumns = 2;
-title("Perfect Slip, Scott (1935)")
+title("No-Slip, Scott (1935)")
+

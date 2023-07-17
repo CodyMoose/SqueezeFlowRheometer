@@ -8,12 +8,21 @@ import math
 
 
 class OpenScale:
+    OLD_READING_KEEP_AMOUNT = 2
+    """How many old readings to keep"""
+    OUTLIER_JUMP_THRESHOLD = 10
+    """The maximum acceptable jump in grams between two force readings"""
+
     def __init__(self):
         self.ser = serial.Serial("COM5", 115200)
         self.config_path = "LoadCell\config.json"
         self.outlier_threshold = (
             100  # g, if a measurement is beyond this limit, throw it out
         )
+
+        self.old_readings = [None] * (
+            OpenScale.OLD_READING_KEEP_AMOUNT + 1
+        )  # also have to store current value
 
         try:
             with open(self.config_path, "r") as read_file:
@@ -90,6 +99,9 @@ class OpenScale:
         reading = None
         while reading is None:
             reading = self.get_reading()
+
+        self.old_readings.pop(0)
+        self.old_readings.append(self.reading_to_units(reading))
         return reading
 
     def get_calibrated_measurement(self) -> float:
@@ -98,7 +110,10 @@ class OpenScale:
         Returns:
             float: force measurement in units chosen during calibration
         """
-        return self.reading_to_units(self.get_reading())
+        meas = self.reading_to_units(self.get_reading())
+        self.old_readings.pop(0)
+        self.old_readings.append(meas)
+        return meas
 
     def wait_for_calibrated_measurement(self, non_outlier: bool = True) -> float:
         """Waits for the next valid reading and returns the calibrated measurement
@@ -112,9 +127,35 @@ class OpenScale:
         meas = None
         while meas is None:
             meas = self.reading_to_units(self.wait_for_reading())
-            if abs(meas) > self.outlier_threshold:
+            if self.check_if_outlier(
+                meas
+            ):  # if it's too far from all of the previous readings
                 meas = None
         return meas
+
+    def check_if_outlier(self, measurement: float) -> bool:
+        """Checks if a measurement is too far from any of the previous stored values.
+
+        Args:
+            measurement (float): _description_
+
+        Returns:
+            bool: True if it's an outlier (too far from prior measurements), False if it's a real measurement
+        """
+        return not any(
+            [
+                (
+                    (old is not None)  # make sure we're comparing to an actual value
+                    and (
+                        abs(measurement - (old if old is not None else 0))
+                        <= OpenScale.OUTLIER_JUMP_THRESHOLD
+                    )
+                )
+                for old in self.old_readings[
+                    0:-1
+                ]  # don't include current reading, which is the last one in the list
+            ]
+        )  # if it's too far from any of the previous readings
 
     def grams_to_N(f: float) -> float:
         """Takes in force in grams and converts to Newtons

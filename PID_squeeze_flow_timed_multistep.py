@@ -452,25 +452,26 @@ def actuator_thread():
         # v_new = min(v_new, 0)  # Only go downward
         actuator.set_vel_mms(v_new)
 
-        # out_str = "{:6.2f}{:}, err = {:6.2f}, errI = {:6.2f}, errD = {:7.2f}, pos = {:6.2f}, v = {:11.5f} : vP = {:6.2f}, vI = {:6.2f}, vD = {:6.2f}, dt = {:6.2f}".format(
-        #     force,
-        #     scale.units,
-        #     error,
-        #     int_error,
-        #     der_error,
-        #     actuator.get_pos_mm(),
-        #     v_new,
-        #     vel_P,
-        #     vel_I,
-        #     vel_D
-        # )
+        out_str = "{:6.2f}{:}, err = {:6.2f}, errI = {:6.2f}, errD = {:7.2f}, gap = {:6.2f}, v = {:11.5f} : vP = {:6.2f}, vI = {:6.2f}, vD = {:6.2f}".format(
+            force,
+            scale.units,
+            error,
+            int_error,
+            der_error,
+            gap_m * 1000,
+            v_new,
+            vel_P,
+            vel_I,
+            vel_D,
+        )
+        print(out_str)
 
         actuator.heartbeat()
 
 
 def background():
     """Records data to csv"""
-    global actuator, start_gap, test_active, spread_beyond_hammer, visc_volume, error, int_error, der_error, yield_stress_guess, gap
+    global actuator, start_gap, test_active, spread_beyond_hammer, visc_volume, error, int_error, der_error, yield_stress_guess
 
     start_time = time()
     while True:

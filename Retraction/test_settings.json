@@ -1,0 +1,10 @@
+{
+    "sample_str": "Carbopol",
+    "approach_max_speed_mms": 1,
+    "retract_gap_mm": 1,
+    "retract_speed_mms": 10,
+    "actuator_step_mode": 4,
+    "actuator_max_accel_mmss": 50,
+    "actuator_max_speed_mms": 30,
+    "pause_time_at_gap": 1
+}

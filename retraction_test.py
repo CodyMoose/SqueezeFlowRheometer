@@ -5,6 +5,8 @@ import math
 from datetime import datetime
 import re
 from LoadCell.openscale import OpenScale
+
+# from LoadCell.openscale import OpenScale
 from Actuator.ticactuator import TicActuator
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -168,7 +170,7 @@ if __name__ == "__main__":
     scale = OpenScale()
 
     # Input test values from external settings file
-    settings_path = "test_settings.json"
+    settings_path = "Retraction/retraction_settings.json"
     with open(settings_path, "r") as read_file:
         settings = json.load(read_file)
 
@@ -206,7 +208,7 @@ if __name__ == "__main__":
         )
         + "-data.csv"
     )
-    with open("data/" + csv_name, "a") as datafile:
+    with open("Retraction/data/" + csv_name, "a") as datafile:
         datafile.write(
             "Current Time,Elapsed Time,Current Position (mm),Current Position,Target Position,Current Velocity (mm/s),Current Velocity,Target Velocity,Max Speed,Max Decel,Max Accel,Step Mode,Voltage In (mV),Current Force ({:}),Start Gap (m),Current Gap (m),Sample Volume (m^3),Viscosity Volume (m^3), Test Active?, Spread beyond hammer?\n".format(
                 scale.units
@@ -256,13 +258,19 @@ def actuator_thread():
     actuator.set_max_speed_mms(approach_velocity)
 
     retract_start_pos = -start_gap + approach_gap
+    print("Moving to start position of {:.1f}mm".format(retract_start_pos))
     actuator.move_to_mm(retract_start_pos)
+
+    actuator.heartbeat()
 
     pause_time = settings["pause_time_at_gap"]
     print("Reached start position. Pausing for {:d} second(s).".format(pause_time))
 
     actuator.set_max_speed_mms(retract_speed)
-    sleep(pause_time)
+    for i in range(0, int(pause_time / 0.1)):
+        actuator.heartbeat()
+        sleep(0.1)
+        actuator.heartbeat()
 
     # Now that test is about to start, throw away most of the pre-test data.
     data_keep_time = 2  # how many seconds to keep
@@ -273,12 +281,15 @@ def actuator_thread():
         times = times[-keep_datapoints:]
         forces = forces[-keep_datapoints:]
         gaps = gaps[-keep_datapoints:]
-        yieldStressGuesses = yieldStressGuesses[-keep_datapoints:]
+
+    actuator.heartbeat()
 
     # Start the test
     print("Starting retraction.")
     test_active = True
+    print(actuator.get_pos_mm())
     actuator.move_to_mm(0)
+    print(actuator.get_pos_mm())
     test_active = False
     print("Retraction complete.")
 

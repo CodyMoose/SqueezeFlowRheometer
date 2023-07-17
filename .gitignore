@@ -6,3 +6,5 @@ LoadCell/config.json
 *.pyc
 .vscode/*
 *.asv
+*.png
+*.fig

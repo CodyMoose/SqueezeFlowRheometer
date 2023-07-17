@@ -84,7 +84,8 @@ end
 
 hold off
 xlabel('h/R [-]')
-ylabel('Yield Stress [Pa], Meeten (2000)')
+ylabel('Yield Stress [Pa]')
+title('Perfect Slip, Meeten (2000)')
 
 % Add legend for the first/main plot handle
 hLegend = legend('location','northeast');
@@ -188,7 +189,59 @@ xlabel('h/R [-]')
 ylabel('Yield Stress [Pa]')
 
 % Add legend for the first/main plot handle
-hLegend = legend('location','southwest');
+hLegend = legend('location','northwest');
 hLegend.NumColumns = 2;
 title("No-Slip, Scott (1935)")
 
+%%
+
+saveFig = figure(5);
+mkdir(smfDataFolder + "\Figures\")
+
+for i = 1:length(smfStructs)
+    clf
+    yyaxis left
+    plot(smfStructs(i).t,smfStructs(i).F)
+    ylabel('Force (N)')
+    hold on
+    yyaxis right
+    plot(smfStructs(i).t,1000*smfStructs(i).h)
+    ylabel('Gap (mm)')
+    hold off
+    xlabel('Time (s)')
+    xlim([min(smfStructs(i).t), max(smfStructs(i).t)])
+    
+    smfDateStr = replace(extractAfter(smfDataFolder,"Data\"),"\","");
+    
+    figTitle = split(smfFiles(i),"-");
+    figTitle = "SMF: " + smfDateStr + " " + figTitle(1) + " " + replace(replace(figTitle(end),".xls",""),"_",".");
+    title(figTitle)
+    
+    figFileName = extractBefore(smfDataFolder + "Figures\" + smfFiles(i),".") + ".png";
+    saveas(saveFig,figFileName)
+end
+
+mkdir(sfrDataFolder + "Figures\");
+for i = 1:length(sfrStructs)
+    sfrDateStr = extractBefore(sfrFiles(i),"_");
+    mkdir(sfrDataFolder + "Figures\" + sfrDateStr + "\");
+
+    clf
+    yyaxis left
+    plot(sfrStructs(i).t,sfrStructs(i).F)
+    ylabel('Force (N)')
+    hold on
+    yyaxis right
+    plot(sfrStructs(i).t,1000*sfrStructs(i).h)
+    ylabel('Gap (mm)')
+    hold off
+    xlabel('Time (s)')
+    xlim([min(sfrStructs(i).t), max(sfrStructs(i).t)])
+    
+    figTitle = replace(replace("Test" + extractAfter(sfrFiles(i),"Test"),"_"," "),"-data.csv","");
+    figTitle = "SFR: " + sfrDateStr + " " + figTitle(1);
+    title(figTitle)
+    
+    figFileName = extractBefore(sfrDataFolder + "Figures\" + sfrDateStr + "\" + sfrFiles(i),".") + ".png";
+    saveas(saveFig,figFileName)
+end

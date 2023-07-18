@@ -14,7 +14,7 @@ import matplotlib.animation as animation
 date = datetime.now()
 date_str = date.strftime("%Y-%m-%d_%H-%M-%S")
 """timestamp string for experiment start time in yyyy-mm-dd_HH:MM:SS format"""
-csv_name = date_str + "_" + "PID_squeeze_flow_1" + "-data.csv"
+csv_name = date_str + "_" + "PID_squeeze_flow_multistep" + "-data.csv"
 
 HAMMER_RADIUS = 25e-3  # m
 HAMMER_AREA = math.pi * HAMMER_RADIUS**2  # m^2
@@ -93,6 +93,8 @@ times = []
 forces = []
 gaps = []
 yieldStressGuesses = []
+
+fig = plt.figure(figsize=(7.2, 4.8))
 
 
 def input_targets(scale_unit: str) -> list[float]:
@@ -326,7 +328,7 @@ def load_cell_thread():
 def actuator_thread():
     """Drives actuator"""
     # global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess, times, gaps, forces
-    global error, int_error, der_error, test_active, times, gaps, forces, yieldStressGuesses, target, step_id, ref_gap
+    global error, int_error, der_error, test_active, times, gaps, forces, yieldStressGuesses, target, step_id, ref_gap, fig
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -426,6 +428,16 @@ def actuator_thread():
             else:
                 print("Last step complete. Test is done.")
                 test_active = False
+
+                # Save fig out before it retracts at end of test
+                fig_name = csv_name.replace("-data.csv", "-livePlottedFigure.png")
+                fig_path = (
+                    "data/Figures/{:}/".format(date.strftime("%Y-%m-%d")) + fig_name
+                )
+                plt.show()
+                plt.draw()
+                fig.savefig(fig_path)
+
                 actuator.go_home_quiet_down()
                 return
 
@@ -566,7 +578,6 @@ ac.start()
 bkg.start()
 
 max_time_window = 30
-fig = plt.figure(figsize=(7.2, 4.8))
 ax1 = fig.add_subplot(1, 1, 1)
 ax2 = ax1.twinx()
 ax3 = ax1.twinx()

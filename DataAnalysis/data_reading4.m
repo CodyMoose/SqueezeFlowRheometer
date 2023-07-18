@@ -6,7 +6,10 @@ sfrFiles = ["2023-07-13_11-38-52_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.
     "2023-07-13_12-34-44_PID_squeeze_flow_1_Test2a-Carbopol_1mL_5g-data.csv";
     "2023-07-13_12-56-20_PID_squeeze_flow_1_Test3a-Carbopol_1mL_30g-data.csv";
     "2023-07-13_14-33-28_PID_squeeze_flow_1_Test4a-Carbopol_5mL_10g-data.csv";
-    "2023-07-18_10-21-01_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.csv"];
+    "2023-07-18_10-21-01_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.csv";
+    "2023-07-18_13-36-55_PID_squeeze_flow_1_Test3a-Carbopol_1mL_5g-data.csv";
+    "2023-07-18_14-28-17_PID_squeeze_flow_1_Test4a-Carpobol_2mL_5g-data.csv";
+    "2023-07-18_15-18-45_PID_squeeze_flow_1_Test5a-Carbopol_4mL_5g-data.csv"];
 
 s = sfrEmptyStructGenerator();
 sfrStructs = repmat(s,length(sfrFiles),1);
@@ -19,7 +22,15 @@ end
 colors = ["#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F",...
     "#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F"];
 
-colorList = parula()
+colorList = parula();
+minVol = sfrStructs(1).V(1);
+maxVol = sfrStructs(1).V(1);
+for i = 2:length(sfrStructs)
+    minVol = min(minVol, sfrStructs(i).V(1));
+    maxVol = max(maxVol, sfrStructs(i).V(1));
+end
+minVol
+maxVol
 
 figure(1)
 for i = 1:length(sfrFiles)
@@ -34,6 +45,18 @@ ylabel('Force [N]')
 legend('Location','southwest')
 
 figure(2)
+for i = 1:length(sfrFiles)
+    DisplayName = split(sfrFiles(i),"PID_squeeze_flow_1_");
+    DisplayName = replace(DisplayName(2), "-data.csv","");
+    loglog(pi * sfrStructs(i).R.^2, sfrStructs(i).F,'DisplayName',DisplayName);
+    hold on
+end
+hold off
+xlabel('Cylinder Cross-Section [m^2]')
+ylabel('Force [N]')
+legend('Location','southwest')
+
+figure(3)
 % plot sfr data
 for i = 1:length(sfrFiles)
     testNum = split(sfrFiles(i),"PID_squeeze_flow_1_");
@@ -42,7 +65,9 @@ for i = 1:length(sfrFiles)
     volStr = num2str(sfrStructs(i).V(1)*10^6,3);
     DisplayName = testNum + " " + volStr + "mL";
 
-    plotColor = colors(i);
+    colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
+    plotColor = colorList(colorIndex,:);
+    % plotColor = colors(i);
     
     hLine = semilogx(sfrStructs(i).aspectRatio, sfrStructs(i).MeetenYieldStress,'+-',...
         'DisplayName',DisplayName,'Color',plotColor,'MarkerSize',0.00001);
@@ -83,7 +108,7 @@ end
 
 
 
-figure(3)
+figure(4)
 % plot sfr data
 for i = 1:length(sfrFiles)
     testNum = split(sfrFiles(i),"PID_squeeze_flow_1_");
@@ -92,8 +117,10 @@ for i = 1:length(sfrFiles)
     volStr = num2str(sfrStructs(i).V(1)*10^6,3);
     DisplayName = "SFR: " + testNum + " " + volStr + "mL";
     
+    % colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
+    % plotColor = colorList(colorIndex,:);
     plotColor = colors(i);
-    semilogx(sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2)),...
+    plot(sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2)),...
         sfrStructs(i).MeetenYieldStress(sfrStructs(i).StepEndIndices(:,2)),'o',...
         'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...
         'MarkerFaceColor',plotColor);
@@ -109,7 +136,7 @@ hLegend.NumColumns = 2;
 title("Perfect Slip, Meeten (2000)")
 
 
-figure(4)
+figure(5)
 % plot sfr data
 for i = 1:length(sfrFiles)
     testNum = split(sfrFiles(i),"PID_squeeze_flow_1_");
@@ -118,7 +145,9 @@ for i = 1:length(sfrFiles)
     volStr = num2str(sfrStructs(i).V(1)*10^6,3);
     DisplayName = "SFR: " + testNum + " " + volStr + "mL";
 
-    plotColor = colors(i);
+    colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
+    plotColor = colorList(colorIndex,:);
+    % plotColor = colors(i);
     semilogx(sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2)),...
         sfrStructs(i).ScottYieldStress(sfrStructs(i).StepEndIndices(:,2)),'o',...
         'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...
@@ -136,7 +165,7 @@ title("No-Slip, Scott (1935)")
 
 %% Save out figures for each test
 
-saveFig = figure(5);
+saveFig = figure(6);
 
 mkdir(sfrDataFolder + "Figures\");
 for i = 1:length(sfrStructs)

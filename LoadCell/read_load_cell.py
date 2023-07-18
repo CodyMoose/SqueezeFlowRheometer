@@ -1,9 +1,8 @@
 import openscale
-from time import time, sleep
+from time import time
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import style
-import math
 import threading
 
 scale = openscale.OpenScale()

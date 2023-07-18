@@ -236,6 +236,7 @@ if __name__ == "__main__":
         c = settings["c"]
         d = settings["d"]
         ref_gap = settings["ref_gap"]
+        default_duration = settings["test_duration"]
 
     # Update variable control parameter based on settings values
     variable_K_P = lambda er, tar: (a + b) / 2 + (a - b) / 2 * math.tanh(

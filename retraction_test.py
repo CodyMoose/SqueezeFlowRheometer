@@ -11,6 +11,7 @@ from Actuator.ticactuator import TicActuator
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from pathlib import Path
+from squeezeflowrheometer import SqueezeFlowRheometer as sfr
 
 # - Initialization -------------------------------------------
 
@@ -21,19 +22,6 @@ csv_name = date_str + "_" + "retraction" + "-data.csv"
 
 HAMMER_RADIUS = 25e-3  # m
 HAMMER_AREA = math.pi * HAMMER_RADIUS**2  # m^2
-
-
-def grams_to_N(f: float) -> float:
-    """Takes in force in grams and converts to Newtons
-
-    Args:
-            f (float): force in grams
-
-    Returns:
-            float: force in Newtons
-    """
-    return 0.00980665 * f
-
 
 force = 0
 """Current force reading. Negative is a force pushing up on the load cell"""
@@ -63,110 +51,6 @@ gaps = []
 settings = {}
 
 
-def input_retract_start_gap() -> float:
-    """Gets gap to approach to and retract from from the user.
-
-    Returns:
-        float: the target gap in mm
-    """
-    plateDiameter = 0.050  # m
-    min_gap = (
-        1000 * 4 * sample_volume / (math.pi * plateDiameter**2)
-    )  # mm, minimum gap before sample is squeeze beyond the plate
-    while True:
-        target_gap_line = input(
-            "Enter the target gap to retract from in [mm]. If you want to use the gap in the settings file, just hit Enter: "
-        )
-        if "settings" in target_gap_line.lower() or len(target_gap_line) <= 0:
-            target_gap = float(settings["retract_gap_mm"])
-        else:
-            target_gap = find_num_in_str(target_gap_line)
-
-        if target_gap < min_gap:
-            print(
-                "That gap is too small! The sample will squeeze out past the edge of the plate. Try a gap larger than {:.2f}".format(
-                    min_gap
-                )
-            )
-        else:
-            break
-    print("Target gap is {:.2f}mm".format(target_gap))
-    return target_gap
-
-
-def input_retract_speed() -> float:
-    """Gets retraction speed from the user.
-
-    Returns:
-        float: the target retraction speed in mm/s
-    """
-    target_speed_line = input(
-        "Enter the retraction speed in [mm/s]. If you want to use the speed in the settings file, just hit Enter: "
-    )
-    if "settings" in target_speed_line.lower() or len(target_speed_line) <= 0:
-        target_speed = abs(float(settings["retract_speed_mms"]))
-    else:
-        target_speed = abs(find_num_in_str(target_speed_line))
-    print("Retraction speed is {:.1f}mm/s".format(target_speed))
-    return target_speed
-
-
-def find_num_in_str(inp: str) -> float:
-    """Finds a number in a string potentially containing additional exraneous text
-
-    Args:
-        inp (str): input string that contains a number and could have extra whitespace, punctuation, or other
-
-    Returns:
-        float: the number contained therein, now parsed as a positive float
-    """
-    temp = re.compile("[0-9.]+")
-    res = temp.search(inp).group(0)
-    return abs(float(res))
-
-
-def input_start_gap() -> float:
-    """Gets start gap in mm from user.
-
-    Returns:
-        float: the start gap in mm
-    """
-    gap_line = input(
-        "Enter the current gap in [mm]. If you want to use the gap in the config file, just hit Enter: "
-    )
-    if "config" in gap_line.lower() or len(gap_line) <= 0:
-        gap = float(scale.config["gap"])
-    else:
-        gap = find_num_in_str(gap_line)
-    print("Starting gap is {:.2f}mm".format(gap))
-    return gap
-
-
-def input_sample_volume() -> float:
-    """Gets sample volume in mL from user
-
-    Returns:
-        float: sample volume in mL
-    """
-    vol_line = input("Enter the sample volume in [mL]: ")
-    sample_vol = find_num_in_str(vol_line) * 1e-6  # m^3
-    print("Sample volume is {:.2f}mL".format(sample_vol * 1e6))
-    return sample_vol
-
-
-def check_tare():
-    """Check if load cell is within tare, otherwise tare it."""
-    weight = scale.wait_for_calibrated_measurement(True)
-    if abs(weight) > 0.5:
-        ans = input(
-            "The load cell is out of tare! Current reading is {:.2f}{:}. Do you want to tare it now? (y/n) ".format(
-                weight, scale.units
-            )
-        )
-        if ans == "y":
-            scale.tare()
-
-
 if __name__ == "__main__":
     scale = OpenScale()
 
@@ -176,10 +60,10 @@ if __name__ == "__main__":
         settings = json.load(read_file)
 
     # Get test details from user
-    start_gap = input_start_gap()
-    sample_volume = input_sample_volume()
-    approach_gap = input_retract_start_gap()
-    retract_speed = input_retract_speed()
+    start_gap = sfr.input_start_gap(scale)
+    sample_volume = sfr.input_sample_volume()
+    approach_gap = sfr.input_retract_start_gap()
+    retract_speed = sfr.input_retract_speed()
     sample_str = input("What's the sample made of? This will be used for file naming. ")
 
     # # Get test details from settings file & config file
@@ -188,7 +72,7 @@ if __name__ == "__main__":
     # retract_speed = float(settings["retract_speed_mms"])
     # sample_str = float(settings["sample_str"])
 
-    check_tare()
+    scale.check_tare()
 
     actuator = TicActuator(step_mode=settings["actuator_step_mode"])
     actuator.set_max_accel_mmss(settings["actuator_max_accel_mmss"], True)

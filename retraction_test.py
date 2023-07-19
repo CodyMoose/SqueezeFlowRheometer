@@ -245,11 +245,7 @@ def actuator_thread():
 
     # - Motion Command Sequence ----------------------------------
 
-    # Energize Motor
-    print("Energizing")
-    actuator.energize()
-    print("Exiting safe start")
-    actuator.exit_safe_start()
+    actuator.startup()
 
     approach_velocity = settings["approach_max_speed_mms"]
     max_force = 80  # g, if force greater than this, stop test.

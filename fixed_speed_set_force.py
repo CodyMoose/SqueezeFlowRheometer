@@ -88,11 +88,7 @@ def actuator_thread():
 
     # - Motion Command Sequence ----------------------------------
 
-    # Energize Motor
-    print("energizing")
-    actuator.energize()
-    print("exiting safe start")
-    actuator.exit_safe_start()
+    actuator.startup()
 
     threshold = 0.5
     vel_mag = 1  # mm/s

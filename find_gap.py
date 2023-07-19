@@ -104,11 +104,7 @@ def actuator_thread():
 
     # - Motion Command Sequence ----------------------------------
 
-    # Energize Motor
-    print("Energizing")
-    actuator.energize()
-    print("Exiting safe start")
-    actuator.exit_safe_start()
+    actuator.startup()
 
     approach_velocity = -0.5  # mm/s, speed to approach bath of fluid at
     force_threshold = 0.8  # g, the force to look for when you hit something

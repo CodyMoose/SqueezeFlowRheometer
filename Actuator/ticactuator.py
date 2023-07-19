@@ -277,3 +277,10 @@ class TicActuator(PyTic):
             else:
                 break
         return var
+
+    def startup(self):
+        """Energizes actuator and exits safe start"""
+        print("Energizing actuator")
+        self.energize()
+        print("Exiting safe start")
+        self.exit_safe_start()

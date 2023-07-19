@@ -231,6 +231,52 @@ SST = sum((yieldStress - meanYieldStress).^2);
 SSR = sum((yieldStress - (h_R*b(2) + b(1))).^2);
 R_squared = 1 - SSR / SST
 
+%% Look at variance of force signal versus gap
+
+portion_of_step = 0.5; % look at the last __ fraction of the force signal in that step (don't look at the start because it needs a chance to try and equilibrate)
+
+F_vars = [];
+F_stds = [];
+h_infinitys = [];
+for i = 1:length(sfrFiles)
+    for j = 1:length(sfrStructs(i).F_tars)
+        idxs = sfrStructs(i).StepEndIndices(j,:);
+        var_indices = floor(idxs(2) - portion_of_step*(idxs(2) - idxs(1))):idxs(2);
+        F_var = var(sfrStructs(i).F(var_indices));
+        F_vars = [F_vars; F_var];
+        F_stds = [F_stds; sqrt(F_var)];
+        h_infinitys = [h_infinitys; sfrStructs(i).h(idxs(2))];
+    end
+end
+
+
+y = F_stds;
+X = 1./h_infinitys;
+c = X \ y
+
+mean_F_std = mean(F_stds);
+SST = sum((F_stds - mean_F_std).^2);
+SSR = sum((F_stds - (c./h_infinitys)).^2);
+R_squared = 1 - SSR / SST
+
+figure(8)
+% loglog(h_infinitys, F_vars,'o')
+% xlabel('h [m]')
+% ylabel('Force Variance [N^2]')
+scatter(h_infinitys, F_stds,'o','filled')
+set(gca, 'xscale', 'log', 'yscale', 'log')
+hold on
+xl = xlim;
+xq = linspace(xl(1),xl(2));
+yl = ylim;
+plot(xq, c./xq, 'k-');
+hold off
+
+xlabel('h [m]')
+ylabel('Force Standard Deviation \sigma [N]')
+title('Force Variation with Gap')
+
+
 %% Save out figures for each test
 
 saveFig = figure(6);

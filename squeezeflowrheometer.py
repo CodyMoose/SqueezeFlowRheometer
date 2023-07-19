@@ -112,50 +112,48 @@ class SqueezeFlowRheometer:
         print("Test duration is {:.2f}s".format(step_dur))
         return step_dur
 
+    def input_retract_start_gap(sample_volume, settings) -> float:
+        """Gets gap to approach to and retract from from the user for a retraction test.
 
-def input_retract_start_gap(sample_volume, settings) -> float:
-    """Gets gap to approach to and retract from from the user for a retraction test.
-
-    Returns:
-        float: the target gap in mm
-    """
-    plateDiameter = 0.050  # m
-    min_gap = (
-        1000 * 4 * sample_volume / (math.pi * plateDiameter**2)
-    )  # mm, minimum gap before sample is squeeze beyond the plate
-    while True:
-        target_gap_line = input(
-            "Enter the target gap to retract from in [mm]. If you want to use the gap in the settings file, just hit Enter: "
-        )
-        if "settings" in target_gap_line.lower() or len(target_gap_line) <= 0:
-            target_gap = float(settings["retract_gap_mm"])
-        else:
-            target_gap = SqueezeFlowRheometer.find_num_in_str(target_gap_line)
-
-        if target_gap < min_gap:
-            print(
-                "That gap is too small! The sample will squeeze out past the edge of the plate. Try a gap larger than {:.2f}".format(
-                    min_gap
-                )
+        Returns:
+            float: the target gap in mm
+        """
+        plateDiameter = 0.050  # m
+        min_gap = (
+            1000 * 4 * sample_volume / (math.pi * plateDiameter**2)
+        )  # mm, minimum gap before sample is squeeze beyond the plate
+        while True:
+            target_gap_line = input(
+                "Enter the target gap to retract from in [mm]. If you want to use the gap in the settings file, just hit Enter: "
             )
+            if "settings" in target_gap_line.lower() or len(target_gap_line) <= 0:
+                target_gap = float(settings["retract_gap_mm"])
+            else:
+                target_gap = SqueezeFlowRheometer.find_num_in_str(target_gap_line)
+
+            if target_gap < min_gap:
+                print(
+                    "That gap is too small! The sample will squeeze out past the edge of the plate. Try a gap larger than {:.2f}".format(
+                        min_gap
+                    )
+                )
+            else:
+                break
+        print("Target gap is {:.2f}mm".format(target_gap))
+        return target_gap
+
+    def input_retract_speed(settings) -> float:
+        """Gets retraction speed from the user for a retraction experiment.
+
+        Returns:
+            float: the target retraction speed in mm/s
+        """
+        target_speed_line = input(
+            "Enter the retraction speed in [mm/s]. If you want to use the speed in the settings file, just hit Enter: "
+        )
+        if "settings" in target_speed_line.lower() or len(target_speed_line) <= 0:
+            target_speed = abs(float(settings["retract_speed_mms"]))
         else:
-            break
-    print("Target gap is {:.2f}mm".format(target_gap))
-    return target_gap
-
-
-def input_retract_speed(settings) -> float:
-    """Gets retraction speed from the user for a retraction experiment.
-
-    Returns:
-        float: the target retraction speed in mm/s
-    """
-    target_speed_line = input(
-        "Enter the retraction speed in [mm/s]. If you want to use the speed in the settings file, just hit Enter: "
-    )
-    if "settings" in target_speed_line.lower() or len(target_speed_line) <= 0:
-        target_speed = abs(float(settings["retract_speed_mms"]))
-    else:
-        target_speed = abs(SqueezeFlowRheometer.find_num_in_str(target_speed_line))
-    print("Retraction speed is {:.1f}mm/s".format(target_speed))
-    return target_speed
+            target_speed = abs(SqueezeFlowRheometer.find_num_in_str(target_speed_line))
+        print("Retraction speed is {:.1f}mm/s".format(target_speed))
+        return target_speed

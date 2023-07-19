@@ -29,8 +29,6 @@ for i = 2:length(sfrStructs)
     minVol = min(minVol, sfrStructs(i).V(1));
     maxVol = max(maxVol, sfrStructs(i).V(1));
 end
-minVol
-maxVol
 
 figure(1)
 for i = 1:length(sfrFiles)
@@ -65,9 +63,9 @@ for i = 1:length(sfrFiles)
     volStr = num2str(sfrStructs(i).V(1)*10^6,3);
     DisplayName = testNum + " " + volStr + "mL";
 
-    colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
-    plotColor = colorList(colorIndex,:);
-    % plotColor = colors(i);
+    % colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
+    % plotColor = colorList(colorIndex,:);
+    plotColor = colors(i);
     
     hLine = semilogx(sfrStructs(i).aspectRatio, sfrStructs(i).MeetenYieldStress,'+-',...
         'DisplayName',DisplayName,'Color',plotColor,'MarkerSize',0.00001);
@@ -111,19 +109,26 @@ end
 figure(4)
 % plot sfr data
 for i = 1:length(sfrFiles)
-    testNum = split(sfrFiles(i),"PID_squeeze_flow_1_");
+    testNum = split(sfrFiles(i),"PID_squeeze_flow_1_Test");
+    dateStr = extractAfter(extractBefore(testNum(1),"_"),"-"); % get just month and day
     testNum = split(testNum(2), "-");
     testNum = testNum(1);
     volStr = num2str(sfrStructs(i).V(1)*10^6,3);
-    DisplayName = "SFR: " + testNum + " " + volStr + "mL";
+    DisplayName = dateStr + " " + testNum + " " + volStr + "mL";
     
     % colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
     % plotColor = colorList(colorIndex,:);
     plotColor = colors(i);
+    fillColor = plotColor;
+    if i > 4
+        fillColor = 'auto';
+    end
+
     plot(sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2)),...
         sfrStructs(i).MeetenYieldStress(sfrStructs(i).StepEndIndices(:,2)),'o',...
         'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...
-        'MarkerFaceColor',plotColor);
+        'MarkerFaceColor',fillColor);
+
     hold on
 end
 hold off
@@ -131,7 +136,7 @@ xlabel('h/R [-]')
 ylabel('Yield Stress [Pa]')
 
 % Add legend for the first/main plot handle
-hLegend = legend('location','southwest');
+hLegend = legend('location','northeast');
 hLegend.NumColumns = 2;
 title("Perfect Slip, Meeten (2000)")
 
@@ -145,9 +150,9 @@ for i = 1:length(sfrFiles)
     volStr = num2str(sfrStructs(i).V(1)*10^6,3);
     DisplayName = "SFR: " + testNum + " " + volStr + "mL";
 
-    colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
-    plotColor = colorList(colorIndex,:);
-    % plotColor = colors(i);
+    % colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
+    % plotColor = colorList(colorIndex,:);
+    plotColor = colors(i);
     semilogx(sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2)),...
         sfrStructs(i).ScottYieldStress(sfrStructs(i).StepEndIndices(:,2)),'o',...
         'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...

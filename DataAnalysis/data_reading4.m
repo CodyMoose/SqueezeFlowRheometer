@@ -181,10 +181,18 @@ for i = 1:length(sfrStructs)
     yyaxis left
     plot(sfrStructs(i).t,sfrStructs(i).F)
     ylabel('Force (N)')
+
+    yl = ylim;
+    ylim([0, max(yl)]);
+
     hold on
     yyaxis right
     plot(sfrStructs(i).t,1000*sfrStructs(i).h)
     ylabel('Gap (mm)')
+
+    yl = ylim;
+    ylim([0, max(yl)]);
+
     hold off
     xlabel('Time (s)')
     xlim([min(sfrStructs(i).t), max(sfrStructs(i).t)])
@@ -193,6 +201,7 @@ for i = 1:length(sfrStructs)
     figTitle = "SFR: " + sfrDateStr + " " + figTitle(1);
     title(figTitle)
     
-    figFileName = extractBefore(sfrDataFolder + "Figures\" + sfrDateStr + "\" + sfrFiles(i),".") + ".png";
+    % figFileName = extractBefore(sfrDataFolder + "Figures\" + sfrDateStr + "\" + sfrFiles(i),".") + ".png";
+    figFileName = extractBefore(sfrDataFolder + "Figures\" + "\" + sfrFiles(i),".") + ".png";
     saveas(saveFig,figFileName)
 end

@@ -10,6 +10,7 @@ from LoadCell.openscale import OpenScale
 from Actuator.ticactuator import TicActuator
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from pathlib import Path
 
 # - Initialization -------------------------------------------
 
@@ -208,6 +209,12 @@ if __name__ == "__main__":
         )
         + "-data.csv"
     )
+
+    # Make sure the data folder as well as the figures folder exists before trying to save anything there
+    Path("data/Figures/{:}".format(date.strftime("%Y-%m-%d"))).mkdir(
+        parents=True, exist_ok=True
+    )
+
     with open("Retraction/data/" + csv_name, "a") as datafile:
         datafile.write(
             "Current Time,Elapsed Time,Current Position (mm),Current Position,Target Position,Current Velocity (mm/s),Current Velocity,Target Velocity,Max Speed,Max Decel,Max Accel,Step Mode,Voltage In (mV),Current Force ({:}),Start Gap (m),Current Gap (m),Sample Volume (m^3),Viscosity Volume (m^3), Test Active?, Spread beyond hammer?\n".format(

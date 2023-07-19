@@ -168,6 +168,69 @@ hLegend = legend('location','northwest');
 hLegend.NumColumns = 2;
 title("No-Slip, Scott (1935)")
 
+
+
+%% Do linear fit of Meeten Stress vs. h/R
+
+h_R = [];
+yieldStress = [];
+
+for i = 1:length(sfrFiles)
+    h_R = [h_R; sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2))];
+    yieldStress = [yieldStress; sfrStructs(i).MeetenYieldStress(sfrStructs(i).StepEndIndices(:,2))];
+end
+
+X = [ones(length(yieldStress),1), h_R];
+y = yieldStress;
+
+b = X \ y;
+
+yieldStressIntercept = b(1);
+
+figure(4)
+% plot sfr data
+for i = 1:length(sfrFiles)
+    testNum = split(sfrFiles(i),"PID_squeeze_flow_1_Test");
+    dateStr = extractAfter(extractBefore(testNum(1),"_"),"-"); % get just month and day
+    testNum = split(testNum(2), "-");
+    testNum = testNum(1);
+    volStr = num2str(sfrStructs(i).V(1)*10^6,3);
+    DisplayName = dateStr + " " + testNum + " " + volStr + "mL";
+    
+    % colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
+    % plotColor = colorList(colorIndex,:);
+    plotColor = colors(i);
+    fillColor = plotColor;
+    if i > 4
+        fillColor = 'auto';
+    end
+
+    semilogx(sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2)),...
+        sfrStructs(i).MeetenYieldStress(sfrStructs(i).StepEndIndices(:,2)),'o',...
+        'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...
+        'MarkerFaceColor',fillColor);
+
+    hold on
+end
+xlabel('h/R [-]')
+ylabel('Yield Stress [Pa]')
+xl = xlim;
+yl = ylim;
+xq = linspace(min(xl), max(xl));
+trendlineStr = "y = " + num2str(b(2),'%.1f') + "x + " + num2str(b(1),'%.1f');
+plot(xq, xq*b(2) + b(1), 'k-', 'DisplayName', trendlineStr)
+hold off
+
+% Add legend for the first/main plot handle
+hLegend = legend('location','southwest');
+hLegend.NumColumns = 2;
+title("Perfect Slip, Meeten (2000)")
+
+meanYieldStress = mean(yieldStress);
+SST = sum((yieldStress - meanYieldStress).^2);
+SSR = sum((yieldStress - (h_R*b(2) + b(1))).^2);
+R_squared = 1 - SSR / SST
+
 %% Save out figures for each test
 
 saveFig = figure(6);

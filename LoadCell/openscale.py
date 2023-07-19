@@ -196,8 +196,10 @@ class OpenScale:
         readings = [0] * N
         print("Now recording values for taring")
         for i in range(N):
-            # reading = self.get_reading()
-            reading = self.wait_for_reading()
+            try:
+                reading = self.wait_for_reading()
+            except:
+                pass  # I don't care if the load cell hasn't yet been calibrated when I'm taring
             readings[i] = reading
             print("{:5d}: {:8d}".format(i, reading))
 

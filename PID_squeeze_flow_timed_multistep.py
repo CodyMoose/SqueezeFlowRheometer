@@ -374,7 +374,10 @@ def background():
             * OpenScale.grams_to_N(force)
             * (gap) ** 2.5
             / ((visc_volume) ** 1.5)
-        )
+        )  # Scott (1935)
+        yield_stress_guess = (
+            OpenScale.grams_to_N(force) * gap / visc_volume / math.sqrt(3)
+        )  # Meeten (2000)
 
         with open(
             "data/" + csv_name, "a"

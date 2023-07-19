@@ -327,7 +327,7 @@ def actuator_thread():
         # v_new = vel_P + vel_D + vel_I
         v_new = vel_P + vel_I
         # v_new = vel_P
-        v_new = v_new * (gap_m / ref_gap) ** 2  # go slower when gap is small
+        v_new = v_new * (gap_m / ref_gap) ** 3  # go slower when gap is small
         # v_new = min(v_new, 0)  # Only go downward
         actuator.set_vel_mms(v_new)
 

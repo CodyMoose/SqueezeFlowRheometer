@@ -302,17 +302,21 @@ def actuator_thread():
                 )
                 plt.show()
                 plt.draw()
-                fig.savefig(fig_path)
+                fig.savefig(fig_path,transparent=True)
 
                 actuator.go_home_quiet_down()
                 return
 
         # Prevent integral windup
-        if abs(int_error) > 1000:
-            int_error = 1000 * math.copysign(1000, int_error)
+        if abs(int_error) > 5:
+            #int_error = 1000 * math.copysign(1000, int_error)
+            int_error = 0
 
         # vel_P = -K_P * error
         vel_P = -variable_K_P(error, target) * error
+        if abs(error) > 1:
+            l_error = 1*error/abs(error)
+            vel_P = -variable_K_P(l_error, target) * l_error
         """Proportional component of velocity response"""
         vel_I = -K_I * int_error
         """Integral component of velocity response"""
@@ -327,7 +331,8 @@ def actuator_thread():
         # v_new = vel_P + vel_D + vel_I
         v_new = vel_P + vel_I
         # v_new = vel_P
-        v_new = v_new * (gap_m / ref_gap) ** 3  # go slower when gap is small
+        # v_new = v_new * (gap_m / ref_gap) ** 2.5  # go slower when gap is small
+        v_new = v_new * (gap_m / ref_gap) ** 1
         # v_new = min(v_new, 0)  # Only go downward
         actuator.set_vel_mms(v_new)
 

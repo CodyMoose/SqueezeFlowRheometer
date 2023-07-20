@@ -134,7 +134,7 @@ def actuator_thread():
         # print("{:6.2f} >=? {:6.2f}".format(get_pos_mm() / 1000.0, start_gap))
     print("Force threshold met, switching over to fine approach.")
 
-    N_find = 25
+    N_find = 10
     gap_list = [0] * N_find
     slowdown_factor = 0.05  # what factor to slow down by on fine approach
 

@@ -93,7 +93,7 @@ if __name__ == "__main__":
     )
 
     # Make sure the data folder as well as the figures folder exists before trying to save anything there
-    Path("data/Figures/{:}".format(date.strftime("%Y-%m-%d"))).mkdir(
+    Path("Retraction/data/Figures/{:}".format(date.strftime("%Y-%m-%d"))).mkdir(
         parents=True, exist_ok=True
     )
 

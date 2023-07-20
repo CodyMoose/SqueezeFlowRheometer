@@ -60,8 +60,8 @@ if __name__ == "__main__":
     # Get test details from user
     start_gap = sfr.input_start_gap(scale)
     sample_volume = sfr.input_sample_volume()
-    approach_gap = sfr.input_retract_start_gap()
-    retract_speed = sfr.input_retract_speed()
+    approach_gap = sfr.input_retract_start_gap(sample_volume, settings)
+    retract_speed = sfr.input_retract_speed(settings)
     sample_str = input("What's the sample made of? This will be used for file naming. ")
 
     # # Get test details from settings file & config file

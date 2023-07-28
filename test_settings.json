@@ -12,7 +12,7 @@
         70
     ],
     "test_duration": 200,
-    "sample_str": "ChocPudding",
+    "sample_str": "Carbopol",
     "K_P": 0.7,
     "K_I": 0.005,
     "K_D": 0.000167,

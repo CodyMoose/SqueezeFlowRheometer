@@ -1,4 +1,4 @@
 from openscale import OpenScale
 
 scale = OpenScale()
-scale.tare(wait_time=30, N=500)
+scale.tare(wait_time=60, N=1500)

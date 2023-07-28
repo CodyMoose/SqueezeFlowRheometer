@@ -7,22 +7,67 @@ sfrFiles = ["2023-07-13_11-38-52_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.
     "2023-07-13_12-56-20_PID_squeeze_flow_1_Test3a-Carbopol_1mL_30g-data.csv";
     "2023-07-13_14-33-28_PID_squeeze_flow_1_Test4a-Carbopol_5mL_10g-data.csv";
     "2023-07-18_10-21-01_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.csv";
-    "2023-07-18_13-36-55_PID_squeeze_flow_1_Test3a-Carbopol_1mL_5g-data.csv";
+    % "2023-07-18_13-36-55_PID_squeeze_flow_1_Test3a-Carbopol_1mL_5g-data.csv"; % force signal was very noisy due to control system issues
     "2023-07-18_14-28-17_PID_squeeze_flow_1_Test4a-Carpobol_2mL_5g-data.csv";
-    "2023-07-18_15-18-45_PID_squeeze_flow_1_Test5a-Carbopol_4mL_5g-data.csv"];
+    "2023-07-18_15-18-45_PID_squeeze_flow_1_Test5a-Carbopol_4mL_5g-data.csv";
+    % "2023-07-19_14-03-21_PID_squeeze_flow_1_Test1a_Carbopol_1mL_5g-data.csv"; % 07-19 data was not good
+    % "2023-07-19_15-03-59_PID_squeeze_flow_1_Test2c-Carbopol_1mL_5g-data.csv";
+    % "2023-07-19_15-50-08_PID_squeeze_flow_1_Test3a_Carbopol_1mL_5g-data.csv";
+    % "2023-07-19_16-17-19_PID_squeeze_flow_1_Test4a_Carbopol_1mL_5g-data.csv";
+    % "2023-07-20_10-30-09_PID_squeeze_flow_1_Test1a_KI=0.7_KP=0.005_decay_rate=-0.1507_carbopol_1mL_5g-data.csv";
+    "2023-07-20_10-51-52_PID_squeeze_flow_1_Test2a_carbopol_KI=0.01_power=2.5_1mL_5g-data.csv";
+    "2023-07-20_11-22-20_PID_squeeze_flow_1_Test3a_carbopol_KP=3_KI=0.03_power=1_1mL_5g-data.csv";
+    "2023-07-20_11-51-48_PID_squeeze_flow_1_Test4a_limited_interr_influence_1mL_5g-data.csv";
+    "2023-07-20_13-28-05_PID_squeeze_flow_1_Test5a_controlled_KP_error_1mL_5g-data.csv";
+    "2023-07-20_13-51-13_PID_squeeze_flow_1_Test6a_smaller_limitation_carbopol_1mL_5g-data.csv";
+    "2023-07-20_14-13-09_PID_squeeze_flow_1_Test7a_carbopol_big_v_test_for_changed_limitations_6mL_5g-data.csv";
+    ];
 
 s = sfrEmptyStructGenerator();
 sfrStructs = repmat(s,length(sfrFiles),1);
 for i = 1:length(sfrFiles)
     filePath = sfrDataFolder + sfrFiles(i);
     sfrStructs(i) = sfrStructGenerator(filePath);
+    % sfrFiles(i)
+    % sfrStructs(i)
+end
+
+%%% Exclude bad data
+
+% 2023-07-20 Test3a had very bad noise from control system in last 2 steps.
+    % Exclude last 2 steps
+idx = find(strcmp(sfrFiles,"2023-07-20_11-22-20_PID_squeeze_flow_1_Test3a_carbopol_KP=3_KI=0.03_power=1_1mL_5g-data.csv"));
+if ~isempty(idx)
+    sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices(1:2,:);
+end
+
+% 2023-07-20 Test4a was abruptly ended before the last step could finish.
+    % Exclude last step
+idx = find(strcmp(sfrFiles,"2023-07-20_11-51-48_PID_squeeze_flow_1_Test4a_limited_interr_influence_1mL_5g-data.csv"));
+if ~isempty(idx)
+    sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices(1:3,:);
+end
+
+% 2023-07-20 Test7a had very bad noise from control system in last 2 steps,
+    % unclear why. Exclude last 2 steps
+idx = find(strcmp(sfrFiles,"2023-07-20_14-13-09_PID_squeeze_flow_1_Test7a_carbopol_big_v_test_for_changed_limitations_6mL_5g-data.csv"));
+if ~isempty(idx)
+    sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices(1:3,:);
 end
 
 %% Plot Data
 colors = ["#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F",...
+    "#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F",...
     "#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F"];
+date_markers = ['o','s','d','^','p','h'];
+date_strs = strings(length(sfrFiles),1);
+for i = 1:length(sfrFiles)
+    date_strs(i) = extractAfter(extractBefore(extractBefore(sfrFiles(i),"PID"),"_"),"-");
+end
+date_strs = unique(date_strs);
 
 colorList = parula();
+
 minVol = sfrStructs(1).V(1);
 maxVol = sfrStructs(1).V(1);
 for i = 2:length(sfrStructs)
@@ -112,6 +157,7 @@ for i = 1:length(sfrFiles)
     testNum = split(sfrFiles(i),"PID_squeeze_flow_1_Test");
     dateStr = extractAfter(extractBefore(testNum(1),"_"),"-"); % get just month and day
     testNum = split(testNum(2), "-");
+    testNum = split(testNum(1), "_");
     testNum = testNum(1);
     volStr = num2str(sfrStructs(i).V(1)*10^6,3);
     DisplayName = dateStr + " " + testNum + " " + volStr + "mL";
@@ -120,12 +166,15 @@ for i = 1:length(sfrFiles)
     % plotColor = colorList(colorIndex,:);
     plotColor = colors(i);
     fillColor = plotColor;
-    if i > 4
-        fillColor = 'auto';
-    end
+    % if i > 7 % make symbols hollow after some point
+    %     fillColor = 'auto';
+    % end
+
+    markerIdx = find(strcmp(date_strs,dateStr));
+    markerStr = date_markers(markerIdx);
 
     plot(sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2)),...
-        sfrStructs(i).MeetenYieldStress(sfrStructs(i).StepEndIndices(:,2)),'o',...
+        sfrStructs(i).MeetenYieldStress(sfrStructs(i).StepEndIndices(:,2)),markerStr,...
         'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...
         'MarkerFaceColor',fillColor);
 
@@ -193,6 +242,7 @@ for i = 1:length(sfrFiles)
     testNum = split(sfrFiles(i),"PID_squeeze_flow_1_Test");
     dateStr = extractAfter(extractBefore(testNum(1),"_"),"-"); % get just month and day
     testNum = split(testNum(2), "-");
+    testNum = split(testNum(1), "_");
     testNum = testNum(1);
     volStr = num2str(sfrStructs(i).V(1)*10^6,3);
     DisplayName = dateStr + " " + testNum + " " + volStr + "mL";
@@ -201,12 +251,15 @@ for i = 1:length(sfrFiles)
     % plotColor = colorList(colorIndex,:);
     plotColor = colors(i);
     fillColor = plotColor;
-    if i > 4
-        fillColor = 'auto';
-    end
+    % if i > 7 % make symbols hollow after some point
+    %     fillColor = 'auto';
+    % end
 
-    semilogx(sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2)),...
-        sfrStructs(i).MeetenYieldStress(sfrStructs(i).StepEndIndices(:,2)),'o',...
+    markerIdx = find(strcmp(date_strs,dateStr));
+    markerStr = date_markers(markerIdx);
+
+    plot(sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2)),...
+        sfrStructs(i).MeetenYieldStress(sfrStructs(i).StepEndIndices(:,2)),markerStr,...
         'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...
         'MarkerFaceColor',fillColor);
 
@@ -222,7 +275,7 @@ plot(xq, xq*b(2) + b(1), 'k-', 'DisplayName', trendlineStr)
 hold off
 
 % Add legend for the first/main plot handle
-hLegend = legend('location','southwest');
+hLegend = legend('location','northeast');
 hLegend.NumColumns = 2;
 title("Perfect Slip, Meeten (2000)")
 
@@ -239,7 +292,7 @@ F_vars = [];
 F_stds = [];
 h_infinitys = [];
 for i = 1:length(sfrFiles)
-    for j = 1:length(sfrStructs(i).F_tars)
+    for j = 1:size(sfrStructs(i).StepEndIndices,1)
         idxs = sfrStructs(i).StepEndIndices(j,:);
         var_indices = floor(idxs(2) - portion_of_step*(idxs(2) - idxs(1))):idxs(2);
         F_var = var(sfrStructs(i).F(var_indices));
@@ -249,27 +302,26 @@ for i = 1:length(sfrFiles)
     end
 end
 
-
-y = F_stds;
-X = 1./h_infinitys;
-c = X \ y
+y = log(F_stds);
+X = [ones(length(h_infinitys),1), log(h_infinitys)];
+q = X \ y;
+c = exp(q(1))
+n = q(2)
 
 mean_F_std = mean(F_stds);
 SST = sum((F_stds - mean_F_std).^2);
-SSR = sum((F_stds - (c./h_infinitys)).^2);
+SSR = sum((F_stds - (c * h_infinitys.^n)).^2);
 R_squared = 1 - SSR / SST
 
 figure(8)
-% loglog(h_infinitys, F_vars,'o')
-% xlabel('h [m]')
-% ylabel('Force Variance [N^2]')
 scatter(h_infinitys, F_stds,'o','filled')
 set(gca, 'xscale', 'log', 'yscale', 'log')
 hold on
 xl = xlim;
 xq = linspace(xl(1),xl(2));
 yl = ylim;
-plot(xq, c./xq, 'k-');
+% plot(xq, c./xq, 'k-');
+plot(xq, c * xq.^n, 'k-');
 hold off
 
 xlabel('h [m]')

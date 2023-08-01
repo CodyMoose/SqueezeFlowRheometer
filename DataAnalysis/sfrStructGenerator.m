@@ -37,7 +37,7 @@ function sfrStruct = sfrStructGenerator(filePath)
     sfrStruct.R = sqrt(sfrStruct.V./(sfrStruct.h * pi));
     sfrStruct.aspectRatio = sfrStruct.h ./ sfrStruct.R;
     sfrStruct.ScottYieldStress = 1.5*sqrt(pi) * (sfrStruct.F .* sfrStruct.h.^(2.5) ./ (sfrStruct.V.^(1.5)));
-    sfrStruct.MeetenYieldStress = (sfrStruct.F .* sfrStruct.h ./ sfrStruct.V) / sqrt(3);
+    sfrStruct.MeetenYieldStress = (sfrStruct.F .* sfrStruct.h ./ sfrStruct.V(1)) / sqrt(3);
     
     % Get unique target forces and identify when each step starts and stops
     sfrStruct.F_tars = unique(sfrStruct.F_tar);

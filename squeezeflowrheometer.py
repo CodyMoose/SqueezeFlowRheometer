@@ -3,7 +3,7 @@ import math
 
 
 class SqueezeFlowRheometer:
-    def input_targets(scale_unit: str) -> list[float]:
+    def input_targets(scale_unit: str, settings: dict) -> list[float]:
         """Takes in a list of strictly increasing force targets from the user
 
         Args:
@@ -17,26 +17,29 @@ class SqueezeFlowRheometer:
         while not target_list_acceptable:
             # Take in values
             targets_string = input(
-                "Please give the set of force targets in [{:}] you want to test, separated by commas and/or spaces: ".format(
+                "Please give the set of force targets in [{:}] you want to test, separated by commas and/or spaces, or press enter to use the default values: ".format(
                     scale_unit
                 )
             )
-            targets_string = targets_string.replace(
-                " ", ","
-            )  # convert spaces to commas to ensure succesful separation of values
-            targets_str_list = targets_string.split(",")  # split list at commas
-            targets_str_list = list(
-                filter(None, targets_str_list)
-            )  # throw out any empty strings created by a ", " becoming ",," being split into an empty string
-            targets_list = [
-                float(tar) for tar in targets_str_list
-            ]  # parse string to float
+            if "config" in targets_string.lower() or len(targets_string) <= 0:
+                targets_list = settings["targets"]
+            else:
+                targets_string = targets_string.replace(
+                    " ", ","
+                )  # convert spaces to commas to ensure succesful separation of values
+                targets_str_list = targets_string.split(",")  # split list at commas
+                targets_str_list = list(
+                    filter(None, targets_str_list)
+                )  # throw out any empty strings created by a ", " becoming ",," being split into an empty string
+                targets_list = [
+                    float(tar) for tar in targets_str_list
+                ]  # parse string to float
             target_list_acceptable = True  # default to assuming the values are fine
 
             # Catch if it's not strictly increasing
             increasing_bools = [
                 targets_list[i] < targets_list[i + 1]
-                for i in range(len(targets_str_list) - 1)
+                for i in range(len(targets_list) - 1)
             ]
             strictly_increasing = all(increasing_bools)
             if not strictly_increasing:

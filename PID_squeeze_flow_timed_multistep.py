@@ -110,7 +110,7 @@ if __name__ == "__main__":
     )
 
     # Get test details from user
-    targets = sfr.input_targets(scale.units)
+    targets = sfr.input_targets(scale.units, settings)
     target = targets[step_id]
     start_gap = sfr.input_start_gap(scale)
     test_duration = sfr.input_step_duration(default_duration)
@@ -310,13 +310,13 @@ def actuator_thread():
                 return
 
         # Prevent integral windup
-        int_threshold = 5
+        int_threshold = 10
         if abs(int_error) > int_threshold:
             int_error = math.copysign(int_threshold, int_error)
 
         # vel_P = -K_P * error
         l_error = error
-        error_threshold = 1
+        error_threshold = 2
         if abs(l_error) > error_threshold:
             l_error = math.copysign(error_threshold, l_error)
         vel_P = -variable_K_P(l_error, step_increase) * l_error

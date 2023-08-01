@@ -162,8 +162,8 @@ def actuator_thread():
                 actuator.move_to_mm(hit_pos + backoff_dist)
                 break
 
-            out_str = "{:7.3f}{:}, pos = {:8.3f}mm".format(
-                force, scale.units, actuator.get_pos_mm()
+            out_str = "{:2d}: {:7.3f}{:}, pos = {:8.3f}mm".format(
+                i + 1, force, scale.units, actuator.get_pos_mm()
             )
 
             # print(force)

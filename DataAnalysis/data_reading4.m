@@ -21,6 +21,15 @@ sfrFiles = ["2023-07-13_11-38-52_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.
     "2023-07-20_13-28-05_PID_squeeze_flow_1_Test5a_controlled_KP_error_1mL_5g-data.csv";
     "2023-07-20_13-51-13_PID_squeeze_flow_1_Test6a_smaller_limitation_carbopol_1mL_5g-data.csv";
     "2023-07-20_14-13-09_PID_squeeze_flow_1_Test7a_carbopol_big_v_test_for_changed_limitations_6mL_5g-data.csv";
+    "2023-07-27_13-50-25_PID_squeeze_flow_1_Test1a-CarbopolA_1mL_5g-data.csv";
+    "2023-07-27_14-37-43_PID_squeeze_flow_1_Test2a-CarbopolA_1mL_5g-data.csv";
+    "2023-07-28_12-32-43_PID_squeeze_flow_1_Test1a-CarbopolB_1mL_5g-data.csv";
+    "2023-07-28_13-30-08_PID_squeeze_flow_1_Test2a-CarbopolB_1mL_5g-data.csv";
+    "2023-07-28_14-18-07_PID_squeeze_flow_1_Test3a-CarbopolB_1mL_5g-data.csv";
+    "2023-07-31_11-35-36_PID_squeeze_flow_1_Test1a-CarbopolB_0mL_5g-data.csv";
+    "2023-07-31_15-20-49_PID_squeeze_flow_1_Test2a-CarbopolB_2mL_5g-data.csv";
+    "2023-07-31_16-40-45_PID_squeeze_flow_1_Test3a-CarbopolB_2mL_5g-data.csv";
+    % "2023-07-31_16-54-45_PID_squeeze_flow_1_Test4b-CarbopolB_2mL_20g-data.csv"; % it was not allowed to reach equilibrium and is not valid
     ];
 
 s = sfrEmptyStructGenerator();
@@ -55,8 +64,38 @@ if ~isempty(idx)
     sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices(1:3,:);
 end
 
+% 2023-07-27 Test1a weird behavior in step 5 unclear why.
+    % Exclude step 5
+idx = find(strcmp(sfrFiles,"2023-07-27_13-50-25_PID_squeeze_flow_1_Test1a-CarbopolA_1mL_5g-data.csv"));
+if ~isempty(idx)
+    sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices([1:4,6:10],:);
+end
+
+% 2023-07-27 Test2a weird behavior in steps 8 and 10 unclear why.
+    % Exclude steps 8 and 10
+idx = find(strcmp(sfrFiles,"2023-07-27_14-37-43_PID_squeeze_flow_1_Test2a-CarbopolA_1mL_5g-data.csv"));
+if ~isempty(idx)
+    sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices([1:7,9],:);
+end
+
+% 2023-07-31 Test1a film became too thin to appropriately reach target
+    % force after step 6. Exclude steps 7-10
+idx = find(strcmp(sfrFiles,"2023-07-31_11-35-36_PID_squeeze_flow_1_Test1a-CarbopolB_0mL_5g-data.csv"));
+if ~isempty(idx)
+    sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices(1:6,:);
+end
+
+% 2023-07-31 Test2a had something weird in step 10. Exclude it.
+idx = find(strcmp(sfrFiles,"2023-07-31_15-20-49_PID_squeeze_flow_1_Test2a-CarbopolB_2mL_5g-data.csv"));
+if ~isempty(idx)
+    sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices(1:9,:);
+end
+
+
 %% Plot Data
 colors = ["#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F",...
+    "#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F",...
+    "#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F",...
     "#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F",...
     "#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F"];
 date_markers = ['o','s','d','^','p','h'];
@@ -158,7 +197,7 @@ for i = 1:length(sfrFiles)
     dateStr = extractAfter(extractBefore(testNum(1),"_"),"-"); % get just month and day
     testNum = split(testNum(2), "-");
     testNum = split(testNum(1), "_");
-    testNum = testNum(1);
+    testNum = extractBefore(testNum(1),2);
     volStr = num2str(sfrStructs(i).V(1)*10^6,3);
     DisplayName = dateStr + " " + testNum + " " + volStr + "mL";
     
@@ -328,6 +367,75 @@ xlabel('h [m]')
 ylabel('Force Standard Deviation \sigma [N]')
 title('Force Variation with Gap')
 
+
+%% Investigate surface tension impact
+
+sigma = 0.066; % From Boujlel & Coussot (2013)
+theta = 1.8; % bows outward, which is what we observe in experiments
+
+figure(8)
+% plot sfr data
+for i = 1:length(sfrFiles)
+    testNum = split(sfrFiles(i),"PID_squeeze_flow_1_Test");
+    dateStr = extractAfter(extractBefore(testNum(1),"_"),"-"); % get just month and day
+    testNum = split(testNum(2), "-");
+    testNum = split(testNum(1), "_");
+    testNum = testNum(1);
+    volStr = num2str(sfrStructs(i).V(1)*10^6,3);
+    DisplayName = dateStr + " " + testNum + " " + volStr + "mL";
+    
+    % colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
+    % plotColor = colorList(colorIndex,:);
+    plotColor = colors(i);
+    fillColor = plotColor;
+    % if i > 7 % make symbols hollow after some point
+    %     fillColor = 'auto';
+    % end
+
+    markerIdx = find(strcmp(date_strs,dateStr));
+    markerStr = date_markers(markerIdx);
+
+    x = sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2));
+    % y = sfrStructs(i).MeetenYieldStress(sfrStructs(i).StepEndIndices(:,2));
+    y = (sfrStructs(i).F(sfrStructs(i).StepEndIndices(:,2)) .* sfrStructs(i).h(sfrStructs(i).StepEndIndices(:,2)) ./ sfrStructs(i).V(1)) / sqrt(3);
+    % y = y / max(y);
+
+    yyaxis left
+    % semilogx(x,y,...
+    %     markerStr,'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...
+    %     'MarkerFaceColor',fillColor);
+    semilogx(x,y,...
+        markerStr,'DisplayName',DisplayName,'MarkerEdgeColor',colors(1),...
+        'MarkerFaceColor',colors(1));
+    % semilogx(x,y,...
+        % markerStr);
+    yyaxis right
+    y = sfrStructs(i).V(1) ./ sfrStructs(i).h(sfrStructs(i).StepEndIndices(:,2));
+    F_sigma = sigma * (-2*cos(theta)*y./ sfrStructs(i).h(sfrStructs(i).StepEndIndices(:,2)) + sqrt(pi * y));
+    F_yield_stress = sfrStructs(i).F(sfrStructs(i).StepEndIndices(:,2)) - F_sigma;
+    y = (F_yield_stress .* sfrStructs(i).h(sfrStructs(i).StepEndIndices(:,2)) ./ sfrStructs(i).V(1)) / sqrt(3);
+    % y = y / max(y);
+    % semilogx(x,y,...
+    %     markerStr);
+    semilogx(x,y,...
+        markerStr,'DisplayName',DisplayName,'MarkerEdgeColor',colors(2),...
+        'MarkerFaceColor',colors(2));
+
+    hold on
+end
+hold off
+xlabel('h/R [-]')
+yyaxis left
+ylabel('Yield Stress, Meeten (2000) [Pa]')
+ylim([0,250])
+yyaxis right
+ylabel('Yield Stress with Surface Tension Correction [Pa]')
+ylim([0,250])
+
+% Add legend for the first/main plot handle
+% hLegend = legend('location','northeast');
+% hLegend.NumColumns = 2;
+title("Comparison of Surface Tension Importance")
 
 %% Save out figures for each test
 

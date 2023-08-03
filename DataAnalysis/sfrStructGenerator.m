@@ -46,6 +46,25 @@ function sfrStruct = sfrStructGenerator(filePath)
         sfrStruct.StepEndIndices(i,1) = find(sfrStruct.F_tar == sfrStruct.F_tars(i),1,"first");
         sfrStruct.StepEndIndices(i,2) = find(sfrStruct.F_tar == sfrStruct.F_tars(i),1,"last");
     end
+
+
+    % Get test date, test number, and sample volume as strings
+    fileName = extractAfter(filePath, "\");
+
+    temp = split(fileName,"PID_squeeze_flow_1_Test");
+    dateStr = extractAfter(extractBefore(temp(1),"_"),"-"); % get just month and day
+    temp = replace(temp(2), "-","_");
+    temp = split(temp(1), "_");
+    testNum = temp(1);
+    sampleSubstance = lower(temp(2));
+    testNum = extractBefore(testNum(1),2);
+    % volStr = num2str(sfrStruct.V(1)*10^6,3) + "mL";
+    volStr = num2str(sfrStruct.V(1)*10^6,"%.2f") + "mL";
+
+    sfrStruct.dateStr = dateStr;
+    sfrStruct.testNum = testNum;
+    sfrStruct.sampleSubstance = sampleSubstance;
+    sfrStruct.volStr = volStr;
 end
 
 function F = gramsToN(f)

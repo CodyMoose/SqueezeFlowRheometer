@@ -31,4 +31,10 @@ function sfrStruct = sfrEmptyStructGenerator()
     % Get unique target forces and identify when each step starts and stops
     sfrStruct.F_tars = [];
     sfrStruct.StepEndIndices = [];
+
+    % Get test date, test number, and sample volume as strings
+    sfrStruct.dateStr = "";
+    sfrStruct.testNum = "";
+    sfrStruct.sampleSubstance = "";
+    sfrStruct.volStr = "";
 end

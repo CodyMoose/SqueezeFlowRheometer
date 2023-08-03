@@ -21,12 +21,12 @@ sfrFiles = ["2023-07-13_11-38-52_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.
     "2023-07-20_13-28-05_PID_squeeze_flow_1_Test5a_carbopol_controlled_KP_error_1mL_5g-data.csv";
     "2023-07-20_13-51-13_PID_squeeze_flow_1_Test6a_carbopol_smaller_limitation_carbopol_1mL_5g-data.csv";
     "2023-07-20_14-13-09_PID_squeeze_flow_1_Test7a_carbopol_big_v_test_for_changed_limitations_6mL_5g-data.csv";
-    "2023-07-27_13-50-25_PID_squeeze_flow_1_Test1a-CarbopolA_1mL_5g-data.csv";
+    % "2023-07-27_13-50-25_PID_squeeze_flow_1_Test1a-CarbopolA_1mL_5g-data.csv"; % abnormally small volume
     "2023-07-27_14-37-43_PID_squeeze_flow_1_Test2a-CarbopolA_1mL_5g-data.csv";
     "2023-07-28_12-32-43_PID_squeeze_flow_1_Test1a-CarbopolB_1mL_5g-data.csv";
-    "2023-07-28_13-30-08_PID_squeeze_flow_1_Test2a-CarbopolB_1mL_5g-data.csv";
-    "2023-07-28_14-18-07_PID_squeeze_flow_1_Test3a-CarbopolB_1mL_5g-data.csv";
-    "2023-07-31_11-35-36_PID_squeeze_flow_1_Test1a-CarbopolB_0mL_5g-data.csv";
+    % "2023-07-28_13-30-08_PID_squeeze_flow_1_Test2a-CarbopolB_1mL_5g-data.csv"; % fiddling with control system, data was weird
+    % "2023-07-28_14-18-07_PID_squeeze_flow_1_Test3a-CarbopolB_1mL_5g-data.csv"; % fiddling with control system, data was weird
+    % "2023-07-31_11-35-36_PID_squeeze_flow_1_Test1a-CarbopolB_0mL_5g-data.csv"; % this was when it was slowed down and so it didn't maintain constant force as usual
     "2023-07-31_15-20-49_PID_squeeze_flow_1_Test2a-CarbopolB_2mL_5g-data.csv";
     "2023-07-31_16-40-45_PID_squeeze_flow_1_Test3a-CarbopolB_2mL_5g-data.csv";
     % "2023-07-31_16-54-45_PID_squeeze_flow_1_Test4b-CarbopolB_2mL_20g-data.csv"; % it was not allowed to reach equilibrium and is not valid
@@ -36,6 +36,7 @@ sfrFiles = ["2023-07-13_11-38-52_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.
     "2023-08-01_14-48-46_PID_squeeze_flow_1_Test4a-CarbopolA_5mL_5g-data.csv";
     "2023-08-01_15-58-22_PID_squeeze_flow_1_Test5a-CarbopolB_1mL_5g-data.csv";
     "2023-08-02_13-12-39_PID_squeeze_flow_1_Test1a-CarbopolB_2mL_5g-data.csv";
+    "2023-08-02_14-19-49_PID_squeeze_flow_1_Test2b-CarbopolB_3mL_5g-data.csv";
     "2023-08-02_15-26-10_PID_squeeze_flow_1_Test3a-CarbopolB_4mL_5g-data.csv";
     "2023-08-02_16-28-59_PID_squeeze_flow_1_Test4a-CarbopolB_5mL_5g-data.csv";
     ];
@@ -86,6 +87,12 @@ if ~isempty(idx)
     sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices([1:7,9],:);
 end
 
+% 2023-07-28 Test1a weird behavior from step 7 onward
+idx = find(strcmp(sfrFiles,"2023-07-28_12-32-43_PID_squeeze_flow_1_Test1a-CarbopolB_1mL_5g-data.csv"));
+if ~isempty(idx)
+    sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices(1:6,:);
+end
+
 % 2023-07-31 Test1a film became too thin to appropriately reach target
     % force after step 6. Exclude steps 7-10
 idx = find(strcmp(sfrFiles,"2023-07-31_11-35-36_PID_squeeze_flow_1_Test1a-CarbopolB_0mL_5g-data.csv"));
@@ -120,7 +127,7 @@ end
 % 2023-08-02 Test4a I accidentally bumped the end effector in step 3
 idx = find(strcmp(sfrFiles,"2023-08-02_16-28-59_PID_squeeze_flow_1_Test4a-CarbopolB_5mL_5g-data.csv"));
 if ~isempty(idx)
-    sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices([1:2,4:10],:);
+    % sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices([1:2,4:10],:);
 end
 
 %%% Get list of unique dates
@@ -132,13 +139,15 @@ end
 date_strs = unique(date_strs);
 
 %%% Get list of unique samples
-sample_strs = strings(length(sfrFiles),1);
-for i = 1:length(sfrFiles)
-    sample_strs(i) = sfrStructs(i).sampleSubstance;
-end
-sample_strs = unique(sample_strs);
+% sample_strs = strings(length(sfrFiles),1);
+% for i = 1:length(sfrFiles)
+%     sample_strs(i) = sfrStructs(i).sampleSubstance;
+% end
+% sample_strs = unique(sample_strs);
+% nice_sample_strs = ["Carbopol", "Carbopol A", "Carbopol B"];
 
-nice_sample_strs = ["Carbopol", "Carbopol A", "Carbopol B"];
+sample_strs = ["carbopola", "carbopolb", "carbopol"];
+nice_sample_strs = ["1.46wt% Carbopol, 0.12wt% NaOH", "1.46wt% Carbopol, 0.18wt% NaOH", "1.46wt% Carbopol, 0.29wt% NaOH"];
 
 %% Plot Data
 colors = ["#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F"];
@@ -259,9 +268,10 @@ for i = 1:length(sample_strs)
     hold off
     xlabel('h/R [-]')
 
-    % Suppress y-ticks for all but the first subplot
-    if i ~= 1
-        % set(gca,'ytick',[])
+    % Have y-ticks only on far left and right
+    if(i == length(sample_strs))
+        set(gca,'YAxisLocation','right')
+    elseif i ~= 1
         set(gca,'yticklabel',[])
     end
     
@@ -279,6 +289,84 @@ ylabel(t,'Yield Stress [Pa]')
 sfrPrettyPlot(false)
 end
 
+
+%% Do linear fit for each sample
+
+% make separate subplots for each sample
+if true
+figure(3)
+t = tiledlayout("horizontal","TileSpacing","tight");
+axs = gobjects(length(sample_strs),1);
+for i = 1:length(sample_strs)
+    axs(i) = nexttile;
+    plotted_counter = 1;
+
+    h_R = [];
+    yieldStress = [];
+
+    for j = 1:length(sfrStructs)
+        if ~strcmpi(sfrStructs(j).sampleSubstance,sample_strs(i))
+            continue
+        end
+
+        s = sfrStructs(j);
+        
+        h_R = [h_R; s.aspectRatio(s.StepEndIndices(:,2))];
+        yieldStress = [yieldStress; s.MeetenYieldStress(s.StepEndIndices(:,2))];
+
+        DisplayName = s.dateStr + " " + s.testNum + " " + s.volStr;
+    
+        plotColor = colors(mod(plotted_counter - 1, length(colors)) + 1);
+        fillColor = plotColor;
+    
+        markerIdx = find(strcmp(date_strs,s.dateStr));
+        markerStr = markers(markerIdx);
+    
+        plot(s.aspectRatio(s.StepEndIndices(:,2)),...
+            s.MeetenYieldStress(s.StepEndIndices(:,2)),markerStr,...
+            'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...
+            'MarkerFaceColor',fillColor);
+    
+        hold on
+        plotted_counter = plotted_counter + 1;
+    end
+
+    X = [ones(length(yieldStress),1), h_R];
+    y = yieldStress;
+    b = X \ y;
+    % yieldStressIntercept = b(1);
+    % abs(b(1) / b(2))
+
+    xl = xlim;
+    % yl = ylim;
+    xq = linspace(min(xl), max(xl));
+    trendlineStr = "y = " + num2str(b(2),'%.1f') + "x + " + num2str(b(1),'%.1f');
+    plot(xq, xq*b(2) + b(1), 'k-', 'DisplayName', trendlineStr)
+
+    hold off
+    xlabel('h/R [-]')
+
+    % Have y-ticks only on far left and right
+    if(i == length(sample_strs))
+        set(gca,'YAxisLocation','right')
+    elseif i ~= 1
+        set(gca,'yticklabel',[])
+    end
+    
+    % Add legend for the first/main plot handle
+    hLegend = legend('location','best');
+    hLegend.NumColumns = 2;
+    % title(sample_strs(i))
+    title(nice_sample_strs(i))
+    grid on
+end
+linkaxes(axs,'xy')
+xlim([0,1])
+ylim([0,250])
+title(t,'Perfect Slip, Meeten (2000)')
+ylabel(t,'Yield Stress [Pa]')
+sfrPrettyPlot(false)
+end
 
 
 %% Do linear fit of Meeten Stress vs. h/R

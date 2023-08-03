@@ -35,6 +35,10 @@ sfrFiles = ["2023-07-13_11-38-52_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.
     "2023-08-01_13-47-01_PID_squeeze_flow_1_Test3a-CarbopolA_4mL_5g-data.csv";
     "2023-08-01_14-48-46_PID_squeeze_flow_1_Test4a-CarbopolA_5mL_5g-data.csv";
     "2023-08-01_15-58-22_PID_squeeze_flow_1_Test5a-CarbopolB_1mL_5g-data.csv";
+    "2023-08-02_13-12-39_PID_squeeze_flow_1_Test1a-CarbopolB_2mL_5g-data.csv";
+    "2023-08-02_14-19-49_PID_squeeze_flow_1_Test2b-CarbopolB_3mL_5g-data.csv";
+    "2023-08-02_15-26-10_PID_squeeze_flow_1_Test3a-CarbopolB_4mL_5g-data.csv";
+    "2023-08-02_16-28-59_PID_squeeze_flow_1_Test4a-CarbopolB_5mL_5g-data.csv";
     ];
 
 s = sfrEmptyStructGenerator();

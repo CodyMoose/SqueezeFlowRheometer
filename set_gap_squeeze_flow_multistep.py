@@ -17,7 +17,7 @@ import numpy as np
 date = datetime.now()
 date_str = date.strftime("%Y-%m-%d_%H-%M-%S")
 """timestamp string for experiment start time in yyyy-mm-dd_HH:MM:SS format"""
-csv_name = date_str + "_" + "PID_squeeze_flow_multistep" + "-data.csv"
+csv_name = date_str + "_" + "set_gap_squeeze_flow_multistep" + "-data.csv"
 
 HAMMER_RADIUS = 25e-3  # m
 HAMMER_AREA = math.pi * HAMMER_RADIUS**2  # m^2
@@ -111,23 +111,18 @@ if __name__ == "__main__":
     )
 
     # Get test details from user
-    # targets = sfr.input_targets(scale.units, settings)
-    # target = targets[step_id]
     start_gap = sfr.input_start_gap(scale)
-    test_duration = sfr.input_step_duration(default_duration)
     sample_volume = sfr.input_sample_volume()
     sample_str = input("What's the sample made of? This will be used for file naming. ")
+
+    # # Get test details from settings file & config file
+    # sample_str = settings["sample_str"]
+    # start_gap = float(scale.config["gap"])
 
     first_gap = sample_volume ** (1.0 / 3.0) * 1000  # mm
     min_gap = sample_volume / HAMMER_AREA * 1000  # mm
     targets = np.geomspace(first_gap, min_gap, 10).tolist()
     target = targets[0]
-
-    # # Get test details from settings file & config file
-    # targets = settings["targets"]
-    # test_duration = settings["test_duration"]
-    # sample_str = settings["sample_str"]
-    # start_gap = float(scale.config["gap"])
 
     scale.check_tare()
 
@@ -143,7 +138,7 @@ if __name__ == "__main__":
     csv_name = (
         date_str
         + "_"
-        + "PID_squeeze_flow_1_{:}_{:d}mL_{:d}{:}".format(
+        + "set_gap_squeeze_flow_{:}_{:d}mL_{:d}{:}".format(
             sample_str, round(sample_volume * 1e6), round(target), scale.units
         )
         + "-data.csv"
@@ -232,7 +227,7 @@ def actuator_thread():
         print("Reached position, waiting")
 
         step_rest_start_time = time()
-        while time() - step_rest_start_time > step_rest_length:
+        while time() - step_rest_start_time <= step_rest_length:
             sleep(0.1)
             actuator.heartbeat()
 
@@ -247,7 +242,6 @@ def actuator_thread():
     fig.savefig(fig_path, transparent=True)
 
     actuator.go_home_quiet_down()
-    return
 
 
 def background():

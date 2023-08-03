@@ -373,14 +373,17 @@ def background():
         vin_voltage = actuator.get_variable_by_name("vin_voltage")
         gap = (cur_pos_mm + start_gap) / 1000.0  # set gap whether or not test is active
 
-        visc_volume = min(sample_volume, HAMMER_AREA * gap)
-        yield_stress_guess = (
-            1.5
-            * math.sqrt(math.pi)
-            * OpenScale.grams_to_N(force)
-            * (gap) ** 2.5
-            / ((visc_volume) ** 1.5)
-        )  # Scott (1935)
+        # visc_volume = min(sample_volume, HAMMER_AREA * gap)
+        visc_volume = (
+            sample_volume  # Carbopol keeps being predicted to over spread too soon
+        )
+        # yield_stress_guess = (
+        #     1.5
+        #     * math.sqrt(math.pi)
+        #     * OpenScale.grams_to_N(force)
+        #     * (gap) ** 2.5
+        #     / ((visc_volume) ** 1.5)
+        # )  # Scott (1935)
         yield_stress_guess = (
             OpenScale.grams_to_N(force) * gap / visc_volume / math.sqrt(3)
         )  # Meeten (2000)

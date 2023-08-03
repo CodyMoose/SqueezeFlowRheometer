@@ -100,8 +100,20 @@ if ~isempty(idx)
     sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices(1:9,:);
 end
 
+% 2023-08-01 Test2a had weird plateau in gap for step 14
+idx = find(strcmp(sfrFiles,"2023-08-01_12-46-21_PID_squeeze_flow_1_Test2a-CarbopolA_3mL_5g-data.csv"));
+if ~isempty(idx)
+    sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices([1:13,15],:);
+end
+
 % 2023-08-01 Test5a had weird plateaus in gap for steps 6, 8, 9, and 11 on
 idx = find(strcmp(sfrFiles,"2023-08-01_15-58-22_PID_squeeze_flow_1_Test5a-CarbopolB_1mL_5g-data.csv"));
+if ~isempty(idx)
+    sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices([1:5,7,10],:);
+end
+
+% 2023-08-02 Test1a had weird plateau in gap for step 9
+idx = find(strcmp(sfrFiles,"2023-08-02_13-12-39_PID_squeeze_flow_1_Test1a-CarbopolB_2mL_5g-data.csv"));
 if ~isempty(idx)
     sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices([1:5,7,10],:);
 end
@@ -422,6 +434,40 @@ xlabel('h [m]')
 ylabel('Force Standard Deviation \sigma [N]')
 title('Force Variation with Gap')
 
+
+%% Plot normalized Yield stress
+
+figure(8)
+% plot sfr data
+for i = 1:length(sfrFiles)
+    s = sfrStructs(i);
+    DisplayName = s.dateStr + " " + s.testNum + " " + s.volStr;
+
+    plotColor = colors(mod(i - 1, length(colors)) + 1);
+    fillColor = plotColor;
+
+    markerIdx = find(strcmp(date_strs,s.dateStr));
+    markerStr = markers(markerIdx);
+
+    x = s.aspectRatio(s.StepEndIndices(:,2));
+    y = s.MeetenYieldStress(s.StepEndIndices(:,2));
+    y = y / max(y);
+
+    semilogx(x,y,...
+        markerStr,'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...
+        'MarkerFaceColor',fillColor);
+
+    hold on
+end
+hold off
+xlabel('h/R [-]')
+ylabel('Normalized Yield Stress \tau / \tau_{max} [-]')
+ylim([0,1])
+
+% Add legend for the first/main plot handle
+% hLegend = legend('location','southwest','FontSize',6);
+% hLegend.NumColumns = 2;
+title("Yield Stress Falloff at Small Gap")
 
 %% Investigate surface tension impact
 

@@ -34,7 +34,7 @@ function sfrStruct = sfrStructGenerator(filePath)
     sfrStruct.V = sfrDataTable.ViscosityVolume_m_3_;
 
     % Compute useful values based on data
-    sfrStruct.R = sqrt(sfrStruct.V./(sfrStruct.h * pi));
+    sfrStruct.R = sqrt(sfrStruct.V(1)./(sfrStruct.h * pi));
     sfrStruct.aspectRatio = sfrStruct.h ./ sfrStruct.R;
     sfrStruct.ScottYieldStress = 1.5*sqrt(pi) * (sfrStruct.F .* sfrStruct.h.^(2.5) ./ (sfrStruct.V.^(1.5)));
     sfrStruct.MeetenYieldStress = (sfrStruct.F .* sfrStruct.h ./ sfrStruct.V(1)) / sqrt(3);

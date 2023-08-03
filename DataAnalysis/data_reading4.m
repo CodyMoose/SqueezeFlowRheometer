@@ -8,7 +8,7 @@ sfrFiles = ["2023-07-13_11-38-52_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.
     "2023-07-13_14-33-28_PID_squeeze_flow_1_Test4a-Carbopol_5mL_10g-data.csv";
     "2023-07-18_10-21-01_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.csv";
     % "2023-07-18_13-36-55_PID_squeeze_flow_1_Test3a-Carbopol_1mL_5g-data.csv"; % force signal was very noisy due to control system issues
-    "2023-07-18_14-28-17_PID_squeeze_flow_1_Test4a-Carpobol_2mL_5g-data.csv";
+    "2023-07-18_14-28-17_PID_squeeze_flow_1_Test4a-Carbopol_2mL_5g-data.csv";
     "2023-07-18_15-18-45_PID_squeeze_flow_1_Test5a-Carbopol_4mL_5g-data.csv";
     % "2023-07-19_14-03-21_PID_squeeze_flow_1_Test1a_Carbopol_1mL_5g-data.csv"; % 07-19 data was not good
     % "2023-07-19_15-03-59_PID_squeeze_flow_1_Test2c-Carbopol_1mL_5g-data.csv";
@@ -17,9 +17,9 @@ sfrFiles = ["2023-07-13_11-38-52_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.
     % "2023-07-20_10-30-09_PID_squeeze_flow_1_Test1a_KI=0.7_KP=0.005_decay_rate=-0.1507_carbopol_1mL_5g-data.csv";
     "2023-07-20_10-51-52_PID_squeeze_flow_1_Test2a_carbopol_KI=0.01_power=2.5_1mL_5g-data.csv";
     "2023-07-20_11-22-20_PID_squeeze_flow_1_Test3a_carbopol_KP=3_KI=0.03_power=1_1mL_5g-data.csv";
-    "2023-07-20_11-51-48_PID_squeeze_flow_1_Test4a_limited_interr_influence_1mL_5g-data.csv";
-    "2023-07-20_13-28-05_PID_squeeze_flow_1_Test5a_controlled_KP_error_1mL_5g-data.csv";
-    "2023-07-20_13-51-13_PID_squeeze_flow_1_Test6a_smaller_limitation_carbopol_1mL_5g-data.csv";
+    "2023-07-20_11-51-48_PID_squeeze_flow_1_Test4a_carbopol_limited_interr_influence_1mL_5g-data.csv";
+    "2023-07-20_13-28-05_PID_squeeze_flow_1_Test5a_carbopol_controlled_KP_error_1mL_5g-data.csv";
+    "2023-07-20_13-51-13_PID_squeeze_flow_1_Test6a_carbopol_smaller_limitation_carbopol_1mL_5g-data.csv";
     "2023-07-20_14-13-09_PID_squeeze_flow_1_Test7a_carbopol_big_v_test_for_changed_limitations_6mL_5g-data.csv";
     "2023-07-27_13-50-25_PID_squeeze_flow_1_Test1a-CarbopolA_1mL_5g-data.csv";
     "2023-07-27_14-37-43_PID_squeeze_flow_1_Test2a-CarbopolA_1mL_5g-data.csv";
@@ -30,6 +30,11 @@ sfrFiles = ["2023-07-13_11-38-52_PID_squeeze_flow_1_Test1a-Carbopol_1mL_5g-data.
     "2023-07-31_15-20-49_PID_squeeze_flow_1_Test2a-CarbopolB_2mL_5g-data.csv";
     "2023-07-31_16-40-45_PID_squeeze_flow_1_Test3a-CarbopolB_2mL_5g-data.csv";
     % "2023-07-31_16-54-45_PID_squeeze_flow_1_Test4b-CarbopolB_2mL_20g-data.csv"; % it was not allowed to reach equilibrium and is not valid
+    "2023-08-01_12-01-47_PID_squeeze_flow_1_Test1a-CarbopolA_2mL_5g-data.csv";
+    "2023-08-01_12-46-21_PID_squeeze_flow_1_Test2a-CarbopolA_3mL_5g-data.csv";
+    "2023-08-01_13-47-01_PID_squeeze_flow_1_Test3a-CarbopolA_4mL_5g-data.csv";
+    "2023-08-01_14-48-46_PID_squeeze_flow_1_Test4a-CarbopolA_5mL_5g-data.csv";
+    "2023-08-01_15-58-22_PID_squeeze_flow_1_Test5a-CarbopolB_1mL_5g-data.csv";
     ];
 
 s = sfrEmptyStructGenerator();
@@ -52,7 +57,7 @@ end
 
 % 2023-07-20 Test4a was abruptly ended before the last step could finish.
     % Exclude last step
-idx = find(strcmp(sfrFiles,"2023-07-20_11-51-48_PID_squeeze_flow_1_Test4a_limited_interr_influence_1mL_5g-data.csv"));
+idx = find(strcmp(sfrFiles,"2023-07-20_11-51-48_PID_squeeze_flow_1_Test4a_carbopol_limited_interr_influence_1mL_5g-data.csv"));
 if ~isempty(idx)
     sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices(1:3,:);
 end
@@ -91,19 +96,30 @@ if ~isempty(idx)
     sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices(1:9,:);
 end
 
+% 2023-08-01 Test5a had weird plateaus in gap for steps 6, 8, 9, and 11 on
+idx = find(strcmp(sfrFiles,"2023-08-01_15-58-22_PID_squeeze_flow_1_Test5a-CarbopolB_1mL_5g-data.csv"));
+if ~isempty(idx)
+    sfrStructs(idx).StepEndIndices = sfrStructs(idx).StepEndIndices([1:5,7,10],:);
+end
 
-%% Plot Data
-colors = ["#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F",...
-    "#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F",...
-    "#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F",...
-    "#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F",...
-    "#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F"];
-date_markers = ['o','s','d','^','p','h'];
+%%% Get list of unique dates
 date_strs = strings(length(sfrFiles),1);
 for i = 1:length(sfrFiles)
-    date_strs(i) = extractAfter(extractBefore(extractBefore(sfrFiles(i),"PID"),"_"),"-");
+    % date_strs(i) = extractAfter(extractBefore(extractBefore(sfrFiles(i),"PID"),"_"),"-");
+    date_strs(i) = sfrStructs(i).dateStr;
 end
 date_strs = unique(date_strs);
+
+%%% Get list of unique samples
+sample_strs = strings(length(sfrFiles),1);
+for i = 1:length(sfrFiles)
+    sample_strs(i) = sfrStructs(i).sampleSubstance;
+end
+sample_strs = unique(sample_strs);
+
+%% Plot Data
+colors = ["#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30","#4DBEEE","#A2142F"];
+markers = ['o','s','d','^','p','h','<','>'];
 
 colorList = parula();
 
@@ -114,6 +130,7 @@ for i = 2:length(sfrStructs)
     maxVol = max(maxVol, sfrStructs(i).V(1));
 end
 
+if false
 figure(1)
 for i = 1:length(sfrFiles)
     DisplayName = split(sfrFiles(i),"PID_squeeze_flow_1_");
@@ -125,7 +142,9 @@ hold off
 xlabel('Gap [m]')
 ylabel('Force [N]')
 legend('Location','southwest')
+end
 
+if false
 figure(2)
 for i = 1:length(sfrFiles)
     DisplayName = split(sfrFiles(i),"PID_squeeze_flow_1_");
@@ -137,9 +156,11 @@ hold off
 xlabel('Cylinder Cross-Section [m^2]')
 ylabel('Force [N]')
 legend('Location','southwest')
+end
 
-figure(3)
 % plot sfr data
+if false
+figure(3)
 for i = 1:length(sfrFiles)
     testNum = split(sfrFiles(i),"PID_squeeze_flow_1_");
     testNum = split(testNum(2), "-");
@@ -149,7 +170,8 @@ for i = 1:length(sfrFiles)
 
     % colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
     % plotColor = colorList(colorIndex,:);
-    plotColor = colors(i);
+    % plotColor = colors(i);
+    plotColor = colors(mod(i - 1, length(colors)) + 1);
     
     hLine = semilogx(sfrStructs(i).aspectRatio, sfrStructs(i).MeetenYieldStress,'+-',...
         'DisplayName',DisplayName,'Color',plotColor,'MarkerSize',0.00001);
@@ -187,33 +209,27 @@ for i = 1:length(sfrFiles)
     newLegendIcon.Size = 6;
     newLegendIcon.FaceColorData = newLegendIcon.EdgeColorData;
 end
+end
 
 
-
+% plot data, changing symbol by day and color by test
+if true
 figure(4)
-% plot sfr data
 for i = 1:length(sfrFiles)
-    testNum = split(sfrFiles(i),"PID_squeeze_flow_1_Test");
-    dateStr = extractAfter(extractBefore(testNum(1),"_"),"-"); % get just month and day
-    testNum = split(testNum(2), "-");
-    testNum = split(testNum(1), "_");
-    testNum = extractBefore(testNum(1),2);
-    volStr = num2str(sfrStructs(i).V(1)*10^6,3);
-    DisplayName = dateStr + " " + testNum + " " + volStr + "mL";
-    
-    % colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
-    % plotColor = colorList(colorIndex,:);
-    plotColor = colors(i);
+    s = sfrStructs(i);
+    DisplayName = s.dateStr + " " + s.testNum + " " + s.volStr;
+
+    plotColor = colors(mod(i - 1, length(colors)) + 1);
     fillColor = plotColor;
     % if i > 7 % make symbols hollow after some point
     %     fillColor = 'auto';
     % end
 
-    markerIdx = find(strcmp(date_strs,dateStr));
-    markerStr = date_markers(markerIdx);
+    markerIdx = find(strcmp(date_strs,s.dateStr));
+    markerStr = markers(markerIdx);
 
-    plot(sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2)),...
-        sfrStructs(i).MeetenYieldStress(sfrStructs(i).StepEndIndices(:,2)),markerStr,...
+    plot(s.aspectRatio(s.StepEndIndices(:,2)),...
+        s.MeetenYieldStress(s.StepEndIndices(:,2)),markerStr,...
         'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...
         'MarkerFaceColor',fillColor);
 
@@ -227,10 +243,48 @@ ylabel('Yield Stress [Pa]')
 hLegend = legend('location','northeast');
 hLegend.NumColumns = 2;
 title("Perfect Slip, Meeten (2000)")
+end
 
-
+% plot data, changing symbol by day and color by sample
+if true
 figure(5)
+for i = 1:length(sfrFiles)
+    s = sfrStructs(i);
+    % DisplayName = s.dateStr + " " + s.testNum + " " + s.volStr;
+    sampleStr = upper(extractAfter(s.sampleSubstance,"carbopol"));
+    DisplayName = s.dateStr + " " + s.testNum + " " + s.volStr + " " + sampleStr;
+
+
+    colorIdx = find(strcmp(sample_strs,s.sampleSubstance));
+    plotColor = colors(colorIdx);
+    fillColor = plotColor;
+    % if i > 7 % make symbols hollow after some point
+    %     fillColor = 'auto';
+    % end
+
+    markerIdx = find(strcmp(date_strs,s.dateStr));
+    markerStr = markers(markerIdx);
+
+    plot(s.aspectRatio(s.StepEndIndices(:,2)),...
+        s.MeetenYieldStress(s.StepEndIndices(:,2)),markerStr,...
+        'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...
+        'MarkerFaceColor',fillColor);
+
+    hold on
+end
+hold off
+xlabel('h/R [-]')
+ylabel('Yield Stress [Pa]')
+
+% Add legend for the first/main plot handle
+hLegend = legend('location','northeast');
+hLegend.NumColumns = 2;
+title("Perfect Slip, Meeten (2000)")
+end
+
 % plot sfr data
+if false
+figure(5)
 for i = 1:length(sfrFiles)
     testNum = split(sfrFiles(i),"PID_squeeze_flow_1_");
     testNum = split(testNum(2), "-");
@@ -238,9 +292,7 @@ for i = 1:length(sfrFiles)
     volStr = num2str(sfrStructs(i).V(1)*10^6,3);
     DisplayName = "SFR: " + testNum + " " + volStr + "mL";
 
-    % colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
-    % plotColor = colorList(colorIndex,:);
-    plotColor = colors(i);
+    plotColor = colors(mod(i - 1, length(colors)) + 1);
     semilogx(sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2)),...
         sfrStructs(i).ScottYieldStress(sfrStructs(i).StepEndIndices(:,2)),'o',...
         'DisplayName',DisplayName,'MarkerEdgeColor',plotColor,...
@@ -255,6 +307,7 @@ ylabel('Yield Stress [Pa]')
 hLegend = legend('location','northwest');
 hLegend.NumColumns = 2;
 title("No-Slip, Scott (1935)")
+end
 
 
 
@@ -285,17 +338,15 @@ for i = 1:length(sfrFiles)
     testNum = testNum(1);
     volStr = num2str(sfrStructs(i).V(1)*10^6,3);
     DisplayName = dateStr + " " + testNum + " " + volStr + "mL";
-    
-    % colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
-    % plotColor = colorList(colorIndex,:);
-    plotColor = colors(i);
+
+    plotColor = colors(mod(i - 1, length(colors)) + 1);
     fillColor = plotColor;
     % if i > 7 % make symbols hollow after some point
     %     fillColor = 'auto';
     % end
 
     markerIdx = find(strcmp(date_strs,dateStr));
-    markerStr = date_markers(markerIdx);
+    markerStr = markers(markerIdx);
 
     plot(sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2)),...
         sfrStructs(i).MeetenYieldStress(sfrStructs(i).StepEndIndices(:,2)),markerStr,...
@@ -383,17 +434,15 @@ for i = 1:length(sfrFiles)
     testNum = testNum(1);
     volStr = num2str(sfrStructs(i).V(1)*10^6,3);
     DisplayName = dateStr + " " + testNum + " " + volStr + "mL";
-    
-    % colorIndex = max(ceil(length(colorList) * (sfrStructs(i).V(1) - minVol)/(maxVol - minVol)),1);
-    % plotColor = colorList(colorIndex,:);
-    plotColor = colors(i);
+    plotColor = colors(mod(i - 1, length(colors)) + 1);
     fillColor = plotColor;
+
     % if i > 7 % make symbols hollow after some point
     %     fillColor = 'auto';
     % end
 
     markerIdx = find(strcmp(date_strs,dateStr));
-    markerStr = date_markers(markerIdx);
+    markerStr = markers(markerIdx);
 
     x = sfrStructs(i).aspectRatio(sfrStructs(i).StepEndIndices(:,2));
     % y = sfrStructs(i).MeetenYieldStress(sfrStructs(i).StepEndIndices(:,2));

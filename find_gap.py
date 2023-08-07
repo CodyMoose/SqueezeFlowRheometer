@@ -106,7 +106,7 @@ def actuator_thread():
 
     actuator.startup()
 
-    approach_velocity = -0.5  # mm/s, speed to approach bath of fluid at
+    approach_velocity = -0.5  # mm/s, speed to approach hard stop at
     force_threshold = 0.8  # g, the force to look for when you hit something
     max_force = 80  # g, if force greater than this, stop test.
     backoff_dist = 0.1  # mm, distance to back away when you hit
@@ -165,14 +165,6 @@ def actuator_thread():
             out_str = "{:2d}: {:7.3f}{:}, pos = {:8.3f}mm".format(
                 i + 1, force, scale.units, actuator.get_pos_mm()
             )
-
-            # print(force)
-            # if(actuator.variables.current_position < lower_limit):
-            # 	set_vel_mms(backoff_velocity)
-            # 	out_str += " - too low overriding ^^^^"
-            # if(actuator.variables.current_position >= upper_limit):
-            # 	set_vel_mms(-backoff_velocity)
-            # 	out_str += " - too high overriding vvvv"
 
             print(out_str)
             # print(actuator.variables.error_status)

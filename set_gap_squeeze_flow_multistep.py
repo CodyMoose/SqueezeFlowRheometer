@@ -33,8 +33,6 @@ step_id = 0
 """Which target step the test is currently on. 0 is the first step"""
 FORCE_UP_SIGN = 1
 """Sign of a positive force. This should be 1 or -1, and is used to compute velocity based on force"""
-dt_force = 0
-"""Time between last two force measurements (s)"""
 start_gap = 0
 """Initial distance (mm) away from hard stop."""
 gap = 0
@@ -54,31 +52,10 @@ spread_beyond_hammer = False
 sample_str = ""
 """What the sample is made of. Used in filename."""
 
-error = 0
-"""Positive error means force must increase, so actuator must extend down"""
-int_error = 0
-"""Time-integrated error"""
-der_error = 0
-"""Time-derivative of error"""
-
-K_P = 0.7
-"""Proportional control coefficient for error in grams to speed in mm/s"""
-K_I = 0.005
-"""Integral control coefficient for integrated error in grams*s to speed in mm/s"""
-K_D = 0.000167
-"""Derivative control coefficient for error derivative in grams/s to speed in mm/s"""
-decay_rate_r = -0.1502
-ref_gap = 0
-
 a = 0.7
 b = 0.15
 c = 50
 d = 0.01
-
-default_duration = 250
-"""Default length of a test in seconds"""
-test_duration = 0
-"""User-chosen test length in seconds. Selected during input sequence."""
 
 times = []
 forces = []
@@ -94,21 +71,6 @@ if __name__ == "__main__":
     settings_path = "test_settings.json"
     with open(settings_path, "r") as read_file:
         settings = json.load(read_file)
-        K_P = settings["K_P"]
-        K_I = settings["K_I"]
-        K_D = settings["K_D"]
-        decay_rate_r = settings["decay_rate_r"]
-        a = settings["a"]
-        b = settings["b"]
-        c = settings["c"]
-        d = settings["d"]
-        ref_gap = settings["ref_gap"]
-        default_duration = settings["test_duration"]
-
-    # Update variable control parameter based on settings values
-    variable_K_P = lambda er, tar: (a + b) / 2 + (a - b) / 2 * math.tanh(
-        c * ((er / tar) ** 2 - d)
-    )
 
     # Get test details from user
     start_gap = sfr.input_start_gap(scale)
@@ -119,9 +81,10 @@ if __name__ == "__main__":
     # sample_str = settings["sample_str"]
     # start_gap = float(scale.config["gap"])
 
-    first_gap = sample_volume ** (1.0 / 3.0) * 1000  # mm
+    # first_gap = sample_volume ** (1.0 / 3.0) * 1000  # mm
+    first_gap = 3
     min_gap = sample_volume / HAMMER_AREA * 1000  # mm
-    targets = np.geomspace(first_gap, min_gap, 10).tolist()
+    targets = np.geomspace(first_gap, 0.5 * min_gap, 20).tolist()
     target = targets[0]
 
     scale.check_tare()
@@ -159,7 +122,7 @@ if __name__ == "__main__":
 
 def load_cell_thread():
     """Continuously reads load cell and reports the upward force on the load cell"""
-    global force, dt_force, error, der_error, int_error, decay_rate_r
+    global force
 
     start_time = time()
 
@@ -167,15 +130,8 @@ def load_cell_thread():
         scale.get_line()
     scale.flush_old_lines()  # and get rid of any others that were generated when we were busy setting up
 
-    cur_time = time()
-    prev_time = cur_time
-
     while True:
         force = scale.wait_for_calibrated_measurement(True) * FORCE_UP_SIGN
-
-        prev_time = cur_time
-        cur_time = time()
-        dt_force = cur_time - prev_time
 
         if (time() - start_time) >= 7200 or (
             (not ac.is_alive()) and (not bkg.is_alive()) and (time() - start_time) > 1
@@ -186,8 +142,7 @@ def load_cell_thread():
 
 def actuator_thread():
     """Drives actuator"""
-    # global gap, eta_guess, error, int_error, der_error, sample_volume, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess, times, gaps, forces
-    global error, int_error, der_error, test_active, times, gaps, forces, yieldStressGuesses, target, step_id, ref_gap, fig
+    global test_active, times, gaps, forces, yieldStressGuesses, target, step_id, fig
 
     print("Waiting 2 seconds before starting")
     sleep(2)
@@ -195,10 +150,6 @@ def actuator_thread():
     # - Motion Command Sequence ----------------------------------
 
     actuator.startup()
-
-    approach_velocity = -1  # mm/s, speed to approach bath of fluid at
-    force_threshold = 0.6  # g, force must exceed this for control system to kick in.
-    max_force = 80  # g, if force greater than this, stop test.
 
     # Now that test is active, throw away most of the pre-test data.
     data_keep_time = 2  # how many seconds to keep
@@ -211,16 +162,24 @@ def actuator_thread():
         gaps = gaps[-keep_datapoints:]
         yieldStressGuesses = yieldStressGuesses[-keep_datapoints:]
 
-    end_test_procedure = False
     step_id = 0
     target = targets[step_id]
 
+    test_active = True
+
     step_rest_length = (
-        30  # seconds, how long to sit at the current spot before moving on
+        45  # seconds, how long to sit at the current spot before moving on
     )
+    max_strain_rate = 0.05  # 1/s
     for t in targets:
         print("Target gap is {:.2f}mm".format(t))
+
         target_pos = t - start_gap
+        target = t
+
+        max_speed = max_strain_rate * t
+        actuator.set_max_speed_mms(max_speed)
+
         actuator.heartbeat()
         actuator.move_to_mm(target_pos)
         actuator.heartbeat()
@@ -241,12 +200,24 @@ def actuator_thread():
     plt.draw()
     fig.savefig(fig_path, transparent=True)
 
+    for t in reversed(targets):
+        target_pos = t - start_gap
+
+        max_speed = max_strain_rate * t
+        actuator.set_max_speed_mms(max_speed)
+
+        actuator.heartbeat()
+        actuator.move_to_mm(target_pos)
+        actuator.heartbeat()
+
+    actuator.set_max_speed_mms(5)
     actuator.go_home_quiet_down()
+    print("Actuator thread is done.")
 
 
 def background():
     """Records data to csv"""
-    global actuator, start_gap, test_active, spread_beyond_hammer, visc_volume, error, int_error, der_error, yield_stress_guess
+    global actuator, start_gap, test_active, spread_beyond_hammer, visc_volume, yield_stress_guess
 
     start_time = time()
     while True:
@@ -308,12 +279,6 @@ def background():
                 visc_volume,
                 test_active,
                 spread_beyond_hammer,
-                error,
-                variable_K_P(error, target),
-                int_error,
-                K_I,
-                der_error,
-                K_D,
             ]
             dataline = ",".join(map(str, output_params)) + "\n"
             datafile.write(dataline)

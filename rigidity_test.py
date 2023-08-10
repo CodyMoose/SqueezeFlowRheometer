@@ -107,7 +107,7 @@ def actuator_thread():
     actuator.startup()
 
     approach_velocity = -0.002  # mm/s, speed to perform rigidity test at
-    backoff_dist = 0.5
+    backoff_dist = 0.2
 
     # Move to just above the plate
     print("Approaching start point")

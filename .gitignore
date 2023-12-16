@@ -10,3 +10,4 @@ LoadCell/config.json
 *.fig
 *.tif
 *.nd2
+*.avi

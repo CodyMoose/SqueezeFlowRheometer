@@ -8,3 +8,4 @@ LoadCell/config.json
 *.asv
 *.png
 *.fig
+*.tif

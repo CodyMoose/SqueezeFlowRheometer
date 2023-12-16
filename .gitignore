@@ -9,3 +9,4 @@ LoadCell/config.json
 *.png
 *.fig
 *.tif
+*.nd2
